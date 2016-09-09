@@ -1,4 +1,4 @@
-﻿import-module C:\scripts\Modules\InternetExplorer\InternetExplorer.psm1 -force
+﻿import-module C:\scripts\InternetExplorer\InternetExplorer.psd1 -force
 Import-Module C:\scripts\FilesandFolders\filesandfolders.psm1 -force
 Import-Module c:\scripts\modules\popup\popup.psm1 -force
 Import-Module C:\scripts\Modules\Shortcut\Shortcut.psm1

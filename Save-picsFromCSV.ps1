@@ -1,5 +1,5 @@
 ﻿
-Import-module c:\scripts\Modules\InternetExplorer\InternetExplorer.psm1 -Force
+Import-module c:\scripts\InternetExplorer\InternetExplorer.psd1 -Force
 Import-Module c:\scripts\modules\pp.psm1 -force
 Import-Module c:\scripts\modules\popup\popup.psm1
 import-module C:\scripts\Modules\Shortcut\Shortcut.psm1 -force
