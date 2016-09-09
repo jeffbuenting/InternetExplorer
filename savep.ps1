@@ -1,77 +1,78 @@
-﻿
-Function Save-PImage {
+﻿Import-module c:\scripts\Modules\InternetExplorer\InternetExplorer.psm1 -Force
+Import-Module C:\scripts\FilesandFolders\filesandfolders.psm1 -Force
+Import-Module c:\scripts\modules\popup\popup.psm1
+Import-Module C:\Scripts\Modules\Shortcut\Shortcut.psm1 -force
 
+    # ---- Return a valid path to save the images
+Import-Module c:\scripts\modules\pp.psm1 -Force
 
-    [CmdletBinding()]
-    param (
-        [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [String[]]$Path
-    )
+$Path = 'P:\Links\2010\2010 FEB'
+get-childitem -path $Path -File -ErrorAction Stop | Select -first 1 | foreach {
+    #$_ | FL *
+    Write-Host "$($_.Name)" -ForegroundColor Green
 
-    Begin {
-        Import-module D:\scripts\Modules\InternetExplorer\InternetExplorer.psm1
-    }
+    
+    $IE = $_ |  Resolve-ShortcutFile | Select-Object -ExpandProperty Url | Get-IEWebPage -Visible
 
-    Process {
-        Foreach ( $P in $Path ) {
+    #$IE
 
-            Write-Verbose "Get shortcut files from path: $P "
-            'http://en.wikipedia.org/wiki/Reser_Stadium','http://www.huskermax.com' | Foreach {
-                
-                Write-Verbose "Processing Page $_"
+    $DestinationPath = Get-FileorFolderPath -InitialDirectory 'p:\'
 
-                $IE = Open-IEWebPage -Url $_ -Visible
+    if ( ($DestinationPath -ne $Null) -and ($DestinationPath -ne "") ) { 
+            $Images = $Null
 
-                # ----- Depending on what the web page is, only return the images with specific names
-                switch -regex ( $_ ) {
-                    'wikipedia.org' {
-                        Write-Verbose "Wikipedia.org page"
-                        $RegexFilter = '\d+[^,\.]+\.jpg'
+            $Images = $IE | Get-PornImages -verbose
+    
+            
+
+        #    "-----------"   
+            $Images
+        #    "-----------" 
+            
+            $Link = $IE.Url
+
+            Write-Host "Saving Shortcut"
+            New-Shortcut -Link $Link -Path $DestinationPath -Verbose
+
+            Write-Host "Saving images..." -ForegroundColor Green
+
+            Foreach ( $I in $images ) {
+                write-output $I
+                try {
+                        $I | Save-IEWebImage -Destination $DestinationPath -Priority 'ForeGround' -ErrorAction Stop -verbose
                     }
-                    default {
-                        Write-Error "Default Process Missing ----- $_"
-                        "Default Process Missing ----- $_" | Out-File -filepath "$Path\LinkErrors.log" -Append
-                        $BreakError = $True
-                    }
-                }
-                
-                # ----- Continue if Process for web page exists
-                if ( -Not $BreakError ) {
+                    catch {
+                        Write-Warning "Problem saving: $($_.Exception.Message)"
+                        Write-output "Trying new base"
+                        # ----- remove duplicates in the Url.  This is required for NNConnect.com
+                        $I -match '.com(\/.*\/)\/'
 
-                    $Images = $IE | Get-IEWebPageImage | where SRC -Match $RegexFilter
+                        $duplicates = $matches[1]
 
-                    # ---- Return a valid path to save the images
-                    [System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
-                    $DestinationPath = [Microsoft.VisualBasic.Interaction]::InputBox("Destination Path for the Images:","Destination Path" )
-                    While ( ($destinationPath -NotMatch "(?:\\\\[^,\\]+\\)?.[:$].+") -and ($DestinationPath -eq $Null) -and ($DestinationPath -eq "") ) {
-                        $DestinationPath = [Microsoft.VisualBasic.Interaction]::InputBox("Destination Path Entered was not Valid.  Please enter a valid Destination Path:","Destination Path" )
-                    }
-
-                    # ----- TODO Validate the destination path is in valid form
-
-                    if ( ($DestinationPath -ne $Null) -and ($DestinationPath -ne "") ) { 
-                            $Images | Save-IEWebImage -Destination $DestinationPath
-
+                        if ( ([regex]::Matches($I,$Duplicates )).count -gt 1 ) {
+                            "$($I.Substring( 0,$I.lastindexof( $Duplicates ) ))$($I.substring($I.LastIndexOf( $Duplicates )+$duplicates.length ) )" | Save-IEWebImage -Destination $DestinationPath -Priority 'ForeGround' -ErrorAction Stop -verbose
                         }
-                        Else {
-                            Write-Error "Destination is Blank or Empty ----- $_"
-                            "Destination is Blank or Empty ----- $_" | Out-File -FilePath "$Path\LinkErrors.log" -Append
-                    }
+
                 }
+            }
 
-                # ----- Clean up
+            Write-Host "Opening Destination to double check if the images saved correctly" -ForegroundColor Green
+            explorer $DestinationPath
 
-                Close-IEWebPage -WebPage $IE 
-
-                # ----- TODO if no errors Delete Shortcut
+            if ( (New-Popup -Message "Did it Save Correctly" -Title 'No errors' -Time 300 -Buttons 'YesNo') -eq 6 ) {
+                Write-Host "Delete Shortcut" -ForegroundColor Green
+                $_ | Remove-Item
             }
         }
-    }
+        else {
+            if ( (New-Popup -Message "Delete Shortcut?" -Title 'delete' -Time 300 -Buttons 'YesNo') -eq 6 ) {
+                Write-Host "Delete Shortcut" -ForegroundColor Green
+                $_ | Remove-Item
+            }
+   }
 
-    End {
-        Remove-Module InternetExplorer
-    }
+    # ----- Clean up
+    write-host "Closing web page" -ForegroundColor Green 
+
+    Close-IEWebPage -WebPage $IE -verbose
 }
-
-
-Save-Pimage -Path c:\temp -verbose

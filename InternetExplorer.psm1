@@ -34,15 +34,15 @@
     [CmdletBinding()]
     param (
         [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [System.__ComObject[]]$WebPage
+        [PSCustomObject[]]$WebPage
     )
 
     Process {
         foreach ( $WP in $WebPage ) {
   
-            Write-Verbose "Getting Images from $($WP.LocationUrl)..."
+            Write-Verbose "Getting Images from $($WP.Url)..."
 
-            $WP.document.getElementsByTagName('img') | Write-Output
+            $WP.HTML.Images | Write-Output
 
         }
     }
@@ -67,16 +67,21 @@ Function Save-IEWebImage {
          Get-IEWebPageImage -url $Url | Save-IEWebImage -Destination 'd:\temp\test'
 
          Copies all images retrieved from $Url web page to d:\temp\test. 
-
 #>
-
 
     [CmdletBinding()]
     param (
         [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [System.__ComObject]$WebImage,
+        [String[]]$Source,
+        
+        [String]$Destination,
 
-        [String]$Destination 
+        [ValidateSet('ForeGround','High','Normal','Low',IgnoreCase=$True)]
+        [String]$Priority = 'Normal',
+
+        [Switch]$BackGround,
+
+        [Switch]$Wait
     )
 
     Begin {
@@ -84,12 +89,28 @@ Function Save-IEWebImage {
 
 	    if (-not (Test-Path $Destination)) { md $Destination }
     }
-    
+
     Process {
-        Write-Verbose "Processing $($WebImage.SRC)"
-        
-        Start-BitsTransfer -Source $WebImage.SRC -Destination "$Destination\$($WebImage.SRC.Split('/')[-1])" -Priority High -DisplayName "$Destination\$($WebImage.SRC.Split('/')[-1])" 
+        Foreach ( $S in $Source ) {
+            Write-Verbose "Saving $S"
+            
+            If ( $Background ) {
+                    $BitsJob = Start-BitsTransfer -Source $S -Destination "$Destination\$($S.Split('/')[-1])" -DisplayName "$Destination\$($S.Split('/')[-1])" -Priority $Priority -Asynchronous
+                }
+                else {
+                    $BitsJob = Start-BitsTransfer -Source $S -Destination "$Destination\$($S.Split('/')[-1])" -DisplayName "$Destination\$($S.Split('/')[-1])" -Priority $Priority
+            }
+            if ( $Wait ) {
+                Write-Verbose "Waiting for Bits Transfer to complete"
+                While ( ( $BitsJob.JobState -ne 'Error' ) -or ( $BitsJob -ne 'Transferred' ) ) {
+                    Sleep -Seconds 15
+                }
+            }
+   
+        }
+
     }
+
 }
 
 #------------------------------------------------------------------------------
@@ -133,22 +154,97 @@ Function Open-IEWebPage {
 	[CmdLetBinding()]
 	Param ( 
         [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [string]$url, 
+        [string[]]$url, 
 	
     	[int]$delayTime = 400,
 
         [Switch]$Visible
     )
 
+    Begin {
+        If ($PSBoundParameters['Debug']) {
+            $DebugPreference = 'Continue'
+        }
+    }
+
     Process {
-        Write-Verbose "Navigating to $Url"
+        Foreach ( $U in $Url ) {
+            Write-Verbose "Navigating to $U"
 
-        $ie = New-Object -com "InternetExplorer.Application"
-	    if ($Visible) { $ie.visible = $true }
-  	    $ie.Navigate($url)
-        While ($ie.Busy) { Start-Sleep -Milliseconds $DelayTime }
+            if ( $Visible ) {
+                $ie = New-Object -com "InternetExplorer.Application"
+	            $ie.visible = $true 
+  	            $ie.Navigate($u)
+              #  Write-Verbose "hello"
+      #$IE
+              #  $Title = $IE.LocationName
+              #  Write-Verbose "Title = $Title"
+               # While ($ie.Busy) { Start-Sleep -Milliseconds $DelayTime }
+            }
 
-        Write-Output $IE
+           
+
+
+            if ( ( -Not $IE ) ) {
+                Write-Verbose "Error - Bad webpage"
+                Throw "Open-IEWebPage : Webpage address is incorrect or the web page is offline"
+                break
+            }
+
+
+     #       Write-Verbose "Title = $Title"
+    #
+    #        $win = New-Object -comObject Shell.Application
+    #        $try = 0
+    #        $ie2 = $null
+    #        do {  
+    ##            Start-Sleep -milliseconds 500  
+    #            $ie2 = @($win.windows() | ? { $_.locationName -like '*PowerShell*' })[0]  
+    #            $try ++  
+    #            if ($try -gt 20) {    
+    #                Throw "Web Page cannot be opened."  
+    #            }
+    #        } while ($ie2 -eq $null)
+
+           write-verbose "$U"
+           Write-Verbose "Should be something on the line above"
+            
+            Try {
+                $WebUrl = Invoke-WebRequest -uri $u -ErrorAction Stop -Verbose:$false
+            }
+            catch {
+                #Write-Error $Error[0].Exception
+                Throw "Open-IEWebPage : Problem opening web page"
+            }
+
+                    $Properties = @{
+                        'HTML' = (  Invoke-WebRequest -uri $u -ErrorAction Stop -Verbose:$false);
+                        'Url' = $U;
+                        'IEApp' = $IE2;
+                        'IE' = $IE;
+                        'Title' = $Title;
+                    }
+                
+                
+
+            $WebPage = New-Object -TypeName psobject -Property $Properties
+
+            Write-Debug "WebPage Ojbect"
+            Write-Debug ($WebPage.IE | Out-String)
+
+            # ----- Don't know why but a Null value is returning.  This will remove any null values and only return the items ith values
+      
+            foreach ( $I in $WebPage ) {
+       
+                if ( $I -ne $Null ) { 
+                        Write-Output $I 
+                    }
+                    Else {
+                        Write-Verbose "Null"
+                }
+  
+            }
+        }
   }
 	  
 }
@@ -160,184 +256,532 @@ Function Close-IEWebPage {
     [CmdLetBinding()]
 	Param ( 
         [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [System.__ComObject[]]$WebPage
+        [PSCustomObject[]]$WebPage
     )
+
+    Begin {
+        # ----- Set Debug to continue without prompting: http://learn-powershell.net/2014/06/01/prevent-write-debug-from-bugging-you/
+        If ($PSBoundParameters['Debug']) {
+            $DebugPreference = 'Continue'
+        }
+    }
 
     Process {
         Foreach ( $WP in $WebPage ) {
-            Write-Verbose "Closing $($WP.LocationUrl)"
-            
-            $WP.Quit()
+            Write-Verbose "Closing $($WP.Url)"
+            Write-Debug ($WP.IE | Out-String )
+
+            $WP.IE.Quit()
         }
+    }
+}
+
+#------------------------------------------------------------------------------
+
+function Resolve-ShortcutFile {
+     
+<#
+    .Description
+        Retrieves the web page address (URL) from a shortcut.
+    .Parameter FileName
+        Full Path to the shortcut
+    .Parameter FilterString
+        String to filter.  If the wep page address is 'Like' this string then it will be returned.  Otherwise it will be skipped.
+    .LINK
+        http://blogs.msdn.com/b/powershell/archive/2008/12/24/resolve-shortcutfile.aspx
+#>          
+           
+    [CmdLetBinding()]
+    param(
+        [Parameter(
+            ValueFromPipeline=$true,
+            ValueFromPipelineByPropertyName=$true,
+            Position = 0)]
+        [Alias("FullName")]
+        [string]$fileName,
+
+        [String]$LikeString = ''
+    )
+    
+    process {
+        
+        Write-Verbose "Processing $_"
+        if ( $LikeString -ne '' ) {
+                Write-Verbose "LikeString = $LikeString - something"
+                if ($fileName -like "*.url") {
+                    Write-Verbose "Filtering Urls"
+                    $ShortCut = Get-Content $fileName | Where-Object { $_ -like "url=*" -and $_ -like "*$LikeString*" } 
+                    if ( $ShortCut -ne $Null ) {
+                        Write-Output ( New-Object -Type PSObject -Property @{'FileName'= $FileName; 'Url' = $ShortCut.Substring($ShortCut.IndexOf("=") + 1 ) } )
+                    }
+                }
+            }
+            Else {
+                Write-Verbose "LikeString = Empty"
+                if ($fileName -like "*.url") {
+                    Write-Verbose "Returning all Urls"
+                    $ShortCut = Get-Content $fileName | Where-Object { $_ -like "url=*" } 
+                    Write-Output ( New-Object -Type PSObject -Property @{'FileName'= $FileName; 'Url' = $ShortCut.Substring($ShortCut.IndexOf("=") + 1 ) } )
+
+                }  
+       }          
+    
+    }
+
+}  
+
+#------------------------------------------------------------------------------
+
+Function Get-IEWebPageLink {
+
+ 	<#
+		.SYNOPSIS
+			Downloads all Links from the WebPage Object
+
+		.DESCRIPTION
+			Analyzes the web page object for Links and returns them.
+
+		.PARAMETER WebPage 
+            Web Page object returned from Open-IEWebPage.
+		
+		.Example
+			Get-IEWebPageImage -WebPage $IE
+
+        .Example 
+            Open-IEWebPage -Url "http://www.powershell.org" | Get-IEWebPageLink
+
+    #>
+
+    [CmdletBinding()]
+    param (
+        [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
+        [PSCustomObject[]]$WebPage
+    )
+    
+    Begin {
+        Write-Verbose "Get-IEWebPageLink"
+        if ( $VerbosePreference -eq [System.Management.Automation.ActionPreference]::Continue ) {
+            Write-Verbose "WebPage Object:"
+            $WebPage
+        }
+    }
+
+    Process {
+        foreach ( $WP in $WebPage ) {
+            #$WP
+            Write-Verbose "Getting Links from $($WP.Url)..."
+
+
+
+            $WP.HTML.Links | Write-Output
+
+        }
+    }
+
+}
+
+#------------------------------------------------------------------------------
+
+Function Get-IEWebVideo {
+
+ 	<#
+		.SYNOPSIS
+			Downloads all Videos from the WebPage Object
+
+		.DESCRIPTION
+			Analyzes the web page object for Videoss and returns them.
+
+		.PARAMETER WebPage 
+            Web Page object returned from Open-IEWebPage.
+		
+		.Example
+			Get-IEWebPageImage -WebPage $IE
+
+        .Example 
+            Open-IEWebPage -Url "http://www.powershell.org" | Get-IEWebVideo
+
+    #>
+
+    [CmdletBinding()]
+    param (
+        [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
+        [PSCustomObject[]]$WebPage
+    )
+
+    Begin {
+        Write-Verbose ""
+        # ----- Set Debug to continue without prompting: http://learn-powershell.net/2014/06/01/prevent-write-debug-from-bugging-you/
+        If ($PSBoundParameters['Debug']) {
+            $DebugPreference = 'Continue'
+        }
+        Write-Debug "WebPage passed in"
+        Write-Debug ($WebPage | Out-String)
+
+        $WebVideo = @()
+    }
+
+
+ 
+    Process {
+        foreach ( $WP in $WebPage ) {
+            Write-Verbose ""
+            Write-Verbose "Getting Videos from $($WP.LocationUrl)..."
+            Write-Debug ( $WP | Out-String )
+            #$WP | FL *   # ------ Don't know why but this won't work without this line.
+            
+            $BreakError = $False
+            $WebVideo = $Null
+
+            Write-Verbose 'Get HTML5 Video elements'
+            
+            write-Verbose 'Parsing Web page code for video sources'
+           
+            #Write-Debug "HTML"
+            #Write-Debug ($WP.HTML.allelements | Out-String )
+            #$WP.HTML.allelements
+            Write-Verbose "Checking Tags"
+            Write-Verbose "               Source"
+            
+            # ----- PinkVelvetVault, PornoXO
+            $WebVideo = $WP.HTML.allelements | where tagname -eq source | where { ($_.src -like '*.m4v') -or ( $_.src -like '*.webm' ) -or ( $_.src -like '*.mp4') } | Select-object -ExpandProperty src
+            $WebVideo += $wp.html.links | where href -like "*.wmv" | Select-Object -ExpandProperty href
+            
+            $Videos = @()
+            Write-Verbose "Checking if WebVideo contains HTTP"
+            foreach ( $V in $WebVideo ) {
+                if ( $WebVideo -notcontains 'http://' ) {
+                    Write-verbose "No Http add base url"
+                    $BaseUrl = $WP.Url -replace 'index.html',''
+                    $Videos += ,"$BaseUrl$V"
+                }
+            }
+            $WebVideo = $Videos
+
+                
+
+
+            switch -Regex ( $WP.HTML.RawContent ) {
+
+                # ----- NNConnect.com
+                """file"": ""(\S+)""" {
+                    Write-Verbose """file"": ""(\S+)"""
+                    Write-Verbose "Found: $($Matches[0])"
+
+                    $baseurl = ($WP.Url | Select-string -Pattern '[^/]*(/(/[^/]*/?)?)?' | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value).trimend( "/")
+                    $WebVideo = "$Baseurl$($Matches[1])"
+                   
+                }
+
+                 # ----- MyDailyTube.com, YourdailyGirls.com, SweetKiss
+                    "clip: {\s+url: '(\S+\.mp4)'" {
+                        Write-Verbose "clip: {\s+url: '(\S+\.mp4)'" 
+                        Write-Verbose "Found: $($Matches[0])"
+                    
+                        $WebVideo = $Matches[1]
+                        break
+                    }
+
+                'file:"(\S+mp4[^"]*)' {
+                    Write-Verbose 'file:"(\S+mp4[^"]*)'
+                    Write-Verbose "Found: $($Matches[0])"
+                    
+                    $WebVideo = $Matches[1]
+                }
+
+                # ----- TubeCup, VikiPorn
+                "video_url: '(\S+.mp4)" {
+                    Write-Verbose "video_url: '(\S+.mp4)"
+                    Write-Verbose "Found: $($Matches[0])"
+                    
+                    $WebVideo = $Matches[1]
+                }
+
+                # ----- DaPorn
+                'Url: "(\S+.mp4)' {
+                    Write-Verbose 'Url: "(\S+.mp4)'
+                    Write-Verbose "Found: $($Matches[0])"
+                    
+                    $WebVideo = $Matches[1]
+                }
+
+                # ----- NikkiSimsVideos.com, xhamster
+                "file=(\S+\.mp4)" {       
+                    Write-Verbose "file=(\S+\.mp4)"
+                    Write-Verbose "Found: $($Matches[0])"
+                    Write-Verbose "$($Matches[1])"
+
+                    $SRC = $Matches[1]
+
+                    if ( $SRC -Match 'http://' ) {
+                            $SRC = ($SRC.substring(1)).TrimEnd('"')
+                            write-verbose "Source is full URL: $SRC"
+                                
+                            $WebVideo = $SRC
+                        }
+                        else {
+                            Write-Verbose 'Building Url'
+                            #$baseUrl = (($Txt | select-string -Pattern 'src=\S+flvplayer.swf' | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value).substring(5)).Replace( 'flvplayer.swf','')
+                            $baseUrl = ($WP.HTML.AllElements | where TagName -eq 'Embed' | Select-Object -ExpandProperty SRC).Replace( 'flvplayer.swf','')
+                            Write-Verbose "BaseUrl = $BaseUrl"
+
+                            $WebVideo = "$BaseUrl$($Matches[1])"
+                    }
+                    break
+                }
+
+                '\[flv\]([\S]+)\[\/flv\]' {
+                    Write-Verbose "video_url: \[flv\]([\S]+)\[\/flv\]"
+                    Write-Verbose "Found: $($Matches[0])"
+                    
+                    $WebVideo = $Matches[1]
+
+                }
+
+                "url: \S+\('([a-z,A-Z,:,\/,\.,\d]+.mp4)" {
+                    Write-Verbose "url: \S+\('([a-z,A-Z,:,\/,\.,\d]+.mp4)"
+                    Write-Verbose "Found: $($Matches[0])"
+                    
+                    $WebVideo = $Matches[1]
+                }
+
+                # ----- KeezMovies
+                #'src="(http://[a-z,A-Z,\d,.,\/,_,\?,=,&]+)' {
+                 #   Write-Verbose 'src="(http://[a-z,A-Z,\d,.,\/,_,\?,=,&]+)'
+                  #  Write-Verbose "Found: $($Matches[0])"
+                   # 
+                    #$WebVideo = $Matches[1]
+                #}
+
+            }
+        
+            Write-Verbose "Video Url:"
+            Write-Verbose ($WebVideo | Out-String)
+            Write-Output $WebVideo        
+        }
+    }
+
+}
+
+#------------------------------------------------------------------------------
+
+
+Function Get-HTMLBaseUrl {
+
+<#
+    .Synopsis
+        Returns the Base path of an HTML Url address.
+
+    .Description
+        Using this you can build a complete path from a relitive path found in image and href items.
+
+#>
+
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$True,ValueFromPipeline=$True)]
+        [String[]]$Url
+    )
+
+    Process {
+        Foreach ( $U in $Url ) {
+            Write-Verbose "Finding Base path for $U"
+
+            # ----- Removing query (Everything after the ?)
+            if ( $U.Contains('?') ) {
+                Write-Verbose "Removing query (?)"
+                $Root = ($U.split( '?' ))[0]
+
+                # ----- Removing page name
+                Write-Verbose "Removing page file name from $Root"
+                Write-Output $Root.substring( 0,$Root.lastindexof( '/' ) )
+                break
+            }
+
+            # ----- remove page from URL
+            if (( $U.Contains('.html')) -or ($U.Contains('.php')) ) {
+                
+                Write-Verbose "Removing HTML/PHP page file name from $U"
+                write-verbose "new Base: $($U.substring( 0,$U.lastindexof( '/' ) ))"
+                Write-Output ($U.substring( 0,$U.lastindexof( '/' )+1 ))
+                break
+            }
+
+            Write-Verbose "Returning input unprocessed as it is already the root"
+            Write-Output $U
+        }
+    }
+}
+
+#------------------------------------------------------------------------------
+
+Function Get-HTMLRootUrl {
+
+<#
+    .Synopsis
+        returns HTML address root url
+#>
+
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory=$True,ValueFromPipeline=$True)]
+        [String[]]$Url
+    )
+
+    Process {
+        Foreach ( $U in $Url ) {
+            Write-Verbose "Finding root path for $U"
+            
+            if ( $U -match '(?''base''http:\/\/.*?\/)' ) { Write-Output ( $Matches['base'].Trimend('/') ) }
+        }
+    }
+
+}
+
+#------------------------------------------------------------------------------
+
+Function Get-IEResponse {
+    
+<#
+    .Link
+        http://stackoverflow.com/questions/1473358/how-to-obtain-numeric-http-status-codes-in-powershell
+#>
+
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory=$True,ValueFromPipeline=$True)]
+        [String]$Url
+    )
+
+    Process {
+        Write-Verbose "Getting website Respose for: $Url"
+        $Request = [System.Net.HttpWebRequest]::Create($Url)
+        try {
+                $Response = $Request.GetResponse() 
+            }
+            Catch {
+                Write-Verbose "Error getting Response"
+                $Response = $Error[0].Exception.InnerException.Response
+        }
+
+       # if ( -Not $Resonse ) { $Response = $Error[0].Exception.InnerException.Response }
+
+        Write-Verbose "Status = $([Int]$Response.StatusCode)"
+        
+        $Response | Add-Member -MemberType NoteProperty -Name 'Status' -Value ([Int]$Response.StatusCode)
+        Write-Output $Response
+    }
+}
+
+#------------------------------------------------------------------------------
+
+Function Test-IEWebPath {
+
+<#
+    .Synopsis
+        Checks if a web path exists
+
+    .Description
+        Used to check if a web path exists.  For example.  Is the address to a JPG valid.
+
+    .Parameter Url
+        Address to the Web Path to test
+
+    .Example
+        test if the following JPG exists at the specified webpage
+
+        Test-IEWebPath -Url http://www.contoso.com/award.jpg
+
+    .Link
+        http://stackoverflow.com/questions/20259251/powershell-script-to-check-the-status-of-a-url
+#>
+    
+    [CmdletBinding()]
+    Param (
+        [String]$Url
+    )
+
+
+    # First we create the request.
+    $HTTP_Request = [System.Net.WebRequest]::Create($Url)
+
+    # We then get a response from the site.
+    $HTTP_Response = $HTTP_Request.GetResponse()
+
+    # We then get the HTTP code as an integer.
+    $HTTP_Status = [int]$HTTP_Response.StatusCode
+
+    If ($HTTP_Status -eq 200) { 
+        Write-Output $True 
+    }
+    Else {
+        Write-Output $Fals
+    }
+
+    # Finally, we clean up the http request by closing it.
+    $HTTP_Response.Close()
+}
+
+Function Test-IEWebPath {
+
+<#
+    .Synopsis
+        Checks if a web path exists
+
+    .Description
+        Used to check if a web path exists.  For example.  Is the address to a JPG valid.
+
+    .Parameter Url
+        Address to the Web Path to test
+
+    .Example
+        test if the following JPG exists at the specified webpage
+
+        Test-IEWebPath -Url http://www.contoso.com/award.jpg
+
+    .Link
+        http://stackoverflow.com/questions/20259251/powershell-script-to-check-the-status-of-a-url
+#>
+    
+    [CmdletBinding()]
+    Param (
+        [Parameter(Mandatory = $True)]
+        [String]$Url
+    )
+
+    Write-Verbose "Test-IEWebPath : Checking for existence of $Url"
+
+    # First we create the request.
+    $HTTP_Request = [System.Net.WebRequest]::Create($Url)
+    Try {
+            # We then get a response from the site.
+            $HTTP_Response = $HTTP_Request.GetResponse()
+
+            # We then get the HTTP code as an integer.
+            $HTTP_Status = [int]$HTTP_Response.StatusCode
+
+            If ($HTTP_Status -eq 200) { 
+                Write-Output $True 
+            }
+            Else {
+                Write-Output $False
+            }
+
+            # Finally, we clean up the http request by closing it.
+            $HTTP_Response.Close()
+        }
+        Catch {
+            Write-Output $False
     }
 }
 
 
 
-#------------------------------------------------------------------------------
-# Function Set-IEWebPageElementByName
-#
-# Fill in specified input filed
-# http://www.pvle.be/2009/06/web-ui-automationFunction Wait-IEWebPageLoad
-#test-using-powershell/
-#------------------------------------------------------------------------------
 
-Function Set-IEWebPageElementbyName {
 
-	[CmdLetBinding()]	
-	param( $ie,
-			[String]$ElementName,
-			[String]$NewValue,
-			[String]$Position = 0 )
-			
-	Write-Verbose $IE.Document
-			
-	if ( $IE.Document -eq $null) {
-    	Write-Error "Document is null";
-   		 break
-  	}
-	
-  	$elements = @($IE.doc.getElementsByName($ElementName))
-  	if ($elements.Count -ne 0) {
-    		$elements[$position].Value = $NewValue
-  		}
-  		else {
-    		Write-Warning "Couldn't find any element with name:$ElementName";
-  	}
-}
 
-#------------------------------------------------------------------------------
-# Function Get-IEWebPageElementByTagName
-#
-# Fill in specified input filed
-# http://www.pvle.be/2009/06/web-ui-automationFunction Wait-IEWebPageLoad
-#test-using-powershell/
-#------------------------------------------------------------------------------
+#[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
 
-Function Get-IEWebPageElementbyTagName {
+Set-Alias -Value Open-IEWebPage -Name Get-IEWebPage
+Set-Alias -Value Save-IEWebImage -Name Save-IEWebVideo
 
-	[CmdLetBinding()]	
-	param( $ie,
-			[String]$ElementTagName )
-			
-	Write-Verbose $ElementTagName
-			
-	if ( $IE.Document -eq $null) {
-    	Write-Error "Document is null";
-   		 break
-  	}
-	
-  	$elements = $IE.document.getElementsByTagName($ElementTagName)
-  	
-	Return $Elements
-}
-
-#------------------------------------------------------------------------------
-# Function Get-IEWebFile
-#
-# Download Video from web page
-#------------------------------------------------------------------------------
-
-function Get-IEWebFile {
-
-	<#
-		.SYNOPSIS
-			Downloads video from web  page
-		
-		.Link
-			http://jacob.ludriks.com/downloading-from-youtube-using-powershell/
-	#>
-
-	[CmdLetBinding()]
-	param ( [Parameter(Mandatory=$True)] [string]$VideoUrl,
-			[String]$userAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome,
-			[String]$itag = '22',
-			[String]$Folder )
-
-	# ----- Potential values for Itag
-	$quality = @{}
-	$quality["5"] = @{"ext"="flv";"width"=400;"height"=240}
-	$quality["6"] = @{"ext"="flv";"width"=450;"height"=270}
-	$quality["13"] = @{"ext"="3gp"}
-	$quality["17"] = @{"ext"="3gp";"width"=176;"height"=144}
-	$quality["18"] = @{"ext"="mp4";"width"=640;"height"=360}
-	$quality["22"] = @{"ext"="mp4";"width"=1280;"height"=720}
-	$quality["34"] = @{"ext"="flv";"width"=640;"height"=360}
-	$quality["35"] = @{"ext"="flv";"width"=854;"height"=480}
-	$quality["36"] = @{"ext"="3gp";"width"=320;"height"=240}
-	$quality["37"] = @{"ext"="mp4";"width"=1920;"height"=1080}
-	$quality["38"] = @{"ext"="mp4";"width"=4096;"height"=3072}
-	$quality["43"] = @{"ext"="webm";"width"=640;"height"=360}
-	$quality["44"] = @{"ext"="webm";"width"=854;"height"=480}
-	$quality["45"] = @{"ext"="webm";"width"=1280;"height"=720}
-	$quality["46"] = @{"ext"="webm";"width"=1920;"height"=1080}
-	 
-	# ----- Grab web page 
-	$content = Invoke-WebRequest -Uri $videoUrl -UserAgent $userAgent
-	# ----- Extract Title
-	$title = $content | Select-String -Pattern '(?i)<title>(.*)<\/title>' | %{ $_.matches.groups[1].value }
-	# ----- Extract Potential Video URLs
-	$html = $content | Select-String -Pattern '"url_encoded_fmt_stream_map":\s"(.*?)"' | %{ $_.matches.groups[1].value }
-	$html = $html -replace "%3A",":"
-	$html = $html -replace "%2F","/"
-	$html = $html -replace "%3F","?"
-	$html = $html -replace "%3D","="
-	$html = $html -replace "%252C","%2C"
-	$html = $html -replace "%26","&"
-	$html = $html -replace "\\u0026","&"
-	$urls = $html.split(",")
-	$urls | Select-String -Pattern 'itag=(\d+)' | % {
-		$val = $_.matches.groups[1].value
-		Write-Host $val") Extension:" $quality[$val].ext "Dimensions:" $quality[$val].width"x"$quality[$val].height
-	}
-	$Urls
-	
-	# ---- Save video that matches specified quality
-	foreach ($url in $urls) {
-		$string = "itag=$itag"
-		$String
-		if ($url -match $string) {
-			"-----"
-			$Url
-			$signature = $url | Select-String -Pattern '(s=[^&]+)' | %{ $_.matches.groups[1].value }
-			$url = $url | Select-String -Pattern '(http.+)' | %{ $_.matches.groups[1].value }
-			$url = $url -replace "(type=[^&]+)",""
-			$url = $url -replace "(fallback_host=[^&]+)",""
-			#$url = $url -replace "(quality=[^&]+)",""
-			$download = $url
-			$download = $download -replace "&+","&"
-			$download = $download -replace "&$",""
-			$download = $download -replace "&itag=\d+",""
-			$download = "$download&itag=$itag"
-			Invoke-WebRequest -Uri $download -OutFile "$Folder\$title.$($quality[$itag].ext)" -UserAgent $useragent
-		}
-	}
-}
-
-#------------------------------------------------------------------------------
-# Function Get-IEVideoUrls
-#
-# Returns the video Source Urls from a web page
-#------------------------------------------------------------------------------
-
-Function Get-IEVideoUrls {
-
-	[CmdLetBinding()]
-	param ( [String]$Url,
-	[String]$userAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome )
-	
-	# ----- Grab web page 
-#	$content = Invoke-WebRequest -Uri $Url -UserAgent $userAgent
-	Get-Content -Path d:\Temp\content.txt
-#	$Content.content
-	$VideoUrls = $content | Select-String -Pattern 'embed SRC="([^"]*)' | %{ $_.matches.groups[1].value }
-	"----"
-	$VideoUrls
-	
-}
-
-#------------------------------------------------------------------------------
-
-[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
-
-#Export-ModuleMember -Function Open-IEWebPage,Set-IEWebPageElementbyName,Get-IEWebPageElementbyTagName,Get-IEWebFile, Get-IEVideoUrls
+#Export-ModuleMember -Function Open-IEWebPage,Close-IEWebPage,Get-IEWebPageImage,Save-IEWebImage,Resolve-ShortcutFile,Get-IEWebPageLink,Get-IEWebVideo,Get-HTMLRootPath -Alias Save-IEWebVideo,Get-IEWebPage
