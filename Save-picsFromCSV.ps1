@@ -1,9 +1,9 @@
 ﻿
 Import-module c:\scripts\InternetExplorer\InternetExplorer.psd1 -Force
-Import-Module c:\scripts\modules\pp.psm1 -force
-Import-Module c:\scripts\modules\popup\popup.psm1
-import-module C:\scripts\Modules\Shortcut\Shortcut.psm1 -force
-Import-Module C:\scripts\FilesandFolders\filesandfolders.psm1 -Force
+Import-Module C:\scripts\InternetExporer\p\p.psd1 -force
+Import-Module c:\scripts\popup\popup.psm1
+import-module C:\scripts\Shortcut\Shortcut.psm1 -force
+Import-Module C:\scripts\FileSystem\filesystem.psd1 -Force
 
 $Links = Import-CSV -Path 'P:\links\savepics.csv'
 
@@ -51,7 +51,7 @@ foreach ( $L in $Links ) {
 
     $Images = $Null
 
-    $Images = $IE | Get-PornImages -verbose
+    $Images = $IE | Get-PImages -verbose
     
     "-----------"   
     $Images

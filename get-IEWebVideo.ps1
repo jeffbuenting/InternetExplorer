@@ -1,7 +1,7 @@
 ﻿import-module C:\scripts\InternetExplorer\InternetExplorer.psd1 -force
-Import-Module C:\scripts\FilesandFolders\filesandfolders.psm1 -force
-Import-Module c:\scripts\modules\popup\popup.psm1 -force
-Import-Module C:\scripts\Modules\Shortcut\Shortcut.psm1
+Import-Module C:\scripts\FileSystem\filesystem.psd1 -force
+Import-Module c:\scripts\popup\popup.psm1 -force
+Import-Module C:\scripts\Shortcut\Shortcut.psm1
 
 
 $Url = ''

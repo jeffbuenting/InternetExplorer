@@ -21,7 +21,7 @@ get-childitem -path $Path -File -ErrorAction Stop | Select -first 1 | foreach {
     if ( ($DestinationPath -ne $Null) -and ($DestinationPath -ne "") ) { 
             $Images = $Null
 
-            $Images = $IE | Get-PornImages -verbose
+            $Images = $IE | Get-PImages -verbose
     
             
 
