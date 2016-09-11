@@ -381,6 +381,8 @@ Function Get-IEWebPageLink {
 }
 
 #------------------------------------------------------------------------------
+# IE Video
+#------------------------------------------------------------------------------
 
 Function Get-IEWebVideo {
 
@@ -462,7 +464,6 @@ Function Get-IEWebVideo {
 
             switch -Regex ( $WP.HTML.RawContent ) {
 
-                # ----- NNConnect.com
                 """file"": ""(\S+)""" {
                     Write-Verbose """file"": ""(\S+)"""
                     Write-Verbose "Found: $($Matches[0])"
@@ -472,14 +473,13 @@ Function Get-IEWebVideo {
                    
                 }
 
-                 # ----- MyDailyTube.com, YourdailyGirls.com, SweetKiss
-                    "clip: {\s+url: '(\S+\.mp4)'" {
-                        Write-Verbose "clip: {\s+url: '(\S+\.mp4)'" 
-                        Write-Verbose "Found: $($Matches[0])"
+                "clip: {\s+url: '(\S+\.mp4)'" {
+                    Write-Verbose "clip: {\s+url: '(\S+\.mp4)'" 
+                    Write-Verbose "Found: $($Matches[0])"
                     
-                        $WebVideo = $Matches[1]
-                        break
-                    }
+                    $WebVideo = $Matches[1]
+                    break
+                }
 
                 'file:"(\S+mp4[^"]*)' {
                     Write-Verbose 'file:"(\S+mp4[^"]*)'
@@ -488,7 +488,6 @@ Function Get-IEWebVideo {
                     $WebVideo = $Matches[1]
                 }
 
-                # ----- TubeCup, VikiPorn
                 "video_url: '(\S+.mp4)" {
                     Write-Verbose "video_url: '(\S+.mp4)"
                     Write-Verbose "Found: $($Matches[0])"
@@ -496,7 +495,6 @@ Function Get-IEWebVideo {
                     $WebVideo = $Matches[1]
                 }
 
-                # ----- DaPorn
                 'Url: "(\S+.mp4)' {
                     Write-Verbose 'Url: "(\S+.mp4)'
                     Write-Verbose "Found: $($Matches[0])"
@@ -504,7 +502,6 @@ Function Get-IEWebVideo {
                     $WebVideo = $Matches[1]
                 }
 
-                # ----- NikkiSimsVideos.com, xhamster
                 "file=(\S+\.mp4)" {       
                     Write-Verbose "file=(\S+\.mp4)"
                     Write-Verbose "Found: $($Matches[0])"
@@ -544,13 +541,6 @@ Function Get-IEWebVideo {
                     $WebVideo = $Matches[1]
                 }
 
-                # ----- KeezMovies
-                #'src="(http://[a-z,A-Z,\d,.,\/,_,\?,=,&]+)' {
-                 #   Write-Verbose 'src="(http://[a-z,A-Z,\d,.,\/,_,\?,=,&]+)'
-                  #  Write-Verbose "Found: $($Matches[0])"
-                   # 
-                    #$WebVideo = $Matches[1]
-                #}
 
             }
         

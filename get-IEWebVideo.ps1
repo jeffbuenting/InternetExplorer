@@ -1,10 +1,25 @@
-﻿import-module C:\scripts\InternetExplorer\InternetExplorer.psd1 -force
-Import-Module C:\scripts\FileSystem\filesystem.psd1 -force
-Import-Module c:\scripts\popup\popup.psm1 -force
-Import-Module C:\scripts\Shortcut\Shortcut.psm1
+﻿#--------------------------------------------------------------------------------------
+# Downloads videos from web page
+#
+# Version : 2.0
+#
+# Author : Jeff Buenting
+#--------------------------------------------------------------------------------------
+
+try {
+        import-module C:\Scripts\InternetExporer\InternetExplorer.psd1 -force -ErrorAction Stop
+        Import-Module C:\scripts\FileSystem\filesystem.psd1 -force -ErrorAction Stop
+        Import-Module c:\scripts\popup\popup.psm1 -force -ErrorAction Stop
+        Import-Module C:\scripts\Shortcut\Shortcut.psm1 -Force -ErrorAction Stop
+    }
+    Catch {
+        $ExceptionMessage = $_.Exception.Message
+        $ExceptionType = $_.Exception.GetType().FullName
+        Throw "Problem importing modules.`n`n     $ExceptionMessage`n     $ExceptionType"
+}
 
 
-$Url = ''
+$Url = 'http://xxxbunker.com/gianna_michaels_has_huge_tits'
 
 $Url | Foreach {
 
