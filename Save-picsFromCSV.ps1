@@ -1,9 +1,15 @@
-﻿
-Import-module c:\scripts\InternetExplorer\InternetExplorer.psd1 -Force
-Import-Module C:\scripts\InternetExporer\p\p.psd1 -force
-Import-Module c:\scripts\popup\popup.psm1
-import-module C:\scripts\Shortcut\Shortcut.psm1 -force
-Import-Module C:\scripts\FileSystem\filesystem.psd1 -Force
+﻿try {
+        import-module C:\Scripts\InternetExporer\InternetExplorer.psd1 -force -ErrorAction Stop
+        Import-Module C:\scripts\InternetExporer\p\p.psd1 -force -ErrorAction Stop
+        Import-Module C:\scripts\FileSystem\filesystem.psd1 -force -ErrorAction Stop
+        Import-Module c:\scripts\popup\popup.psm1 -force -ErrorAction Stop
+        Import-Module C:\scripts\Shortcut\Shortcut.psm1 -Force -ErrorAction Stop
+    }
+    Catch {
+        $ExceptionMessage = $_.Exception.Message
+        $ExceptionType = $_.Exception.GetType().FullName
+        Throw "Problem importing modules.`n`n     $ExceptionMessage`n     $ExceptionType"
+}
 
 $Links = Import-CSV -Path 'P:\links\savepics.csv'
 

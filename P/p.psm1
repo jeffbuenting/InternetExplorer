@@ -10,6 +10,23 @@
         [int]$MaxRecurseLevel = 1
     )
 
+    Begin {
+        # ----- List of words to ignore if they are part of an image link
+        $ExcludedWords = '468x60','anna','atk',
+                    'backtohome','backtohome','banner','bella','big.jpg','box_title_main_menu',
+                    '/cm/',
+                    'friends','front','frontpage',
+                    'gallery-','girls/',
+                    'header','header','hor_',
+                    'imgs/','/img',
+                    'kris',
+                    'littlepics','lily.jpg','logo',
+                    'newupdates','nov',
+                    'oct',
+                    'paysite.jpg',
+                    'sascha','search','separator','small','stmac.jpg',
+                    't.jpg','Template','tgp','th','thumb','tk_','tn.jpg','tn2','tn_'
+    }
    
 
     process {
@@ -76,6 +93,7 @@
                     -and ( -Not ($_.src).contains( 'tgp') ) `
                     -and ( -Not ($_.src).contains( 'th') ) `
                     -and ( -Not ($_.src).contains( 'thumb' ) ) `
+                    -and ( -Not ($_.src).contains( 'updatethumbs' ) ) `
                     -and ( -Not ($_.src).contains( 'tk_' ) ) `
                     -and ( -Not ($_.src).contains( 'tn.jpg') ) `
                     -and ( -Not ($_.src).contains( 'tn2') ) `
@@ -130,6 +148,7 @@
                     -and ( -Not ($_.src).contains( 'tn2') ) `
                     -and ( (($_.src) -notmatch 'tn\d*\.jpg')) `
                     -and ( -Not ($_.src).contains( 'thumb' ) ) `
+                    -and ( -Not ($_.src).contains( 'updatethumbs' ) ) `
                     -and ( -Not ($_.src).contains( 'upload') ) ) {
                             
                             $PotentialIMG = $_.SRC
@@ -187,11 +206,11 @@
             # ----- Check for full URL to Images ( jpgs )
             Write-Verbose "Get-PImages : ---------------------------- Checking for JPG with full URL"
             $WP.HTML.links | where { ( $_.href -Match 'http:\/\/.*\.jpg' ) -and ( -Not $_.href.contains('?') ) } | Select-Object -ExpandProperty HREF | Where { Test-IEWebPath -Url $_ } | Foreach {
-                Write-Verbose "----- Found : $_"
+                Write-Verbose "***** Found : $_"
                 Write-Output $_
             }
             #if ( $FullJPGUrl ) {
-            #    Write-Verbose "----- Found: $FullJPGUrl"
+            #    Write-Verbose "***** Found: $FullJPGUrl"
             #    Write-Output $FullJPGUrl
             #}
 
