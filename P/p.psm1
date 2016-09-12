@@ -25,7 +25,8 @@
                     'oct',
                     'paysite.jpg',
                     'sascha','search','separator','small','stmac.jpg',
-                    't.jpg','Template','tgp','th','thumb','tk_','tn.jpg','tn2','tn_'
+                    't.jpg','Template','tgp','th','thumb','tk_','tn.jpg','tn2','tn_',
+                    'webcam'
     }
    
 
@@ -43,7 +44,7 @@
             $Pics = @()
 
             #-------------------------------------------------------------------------------
-            # ----- Images on the page. Excluding frontpage,littlepics
+            # ----- Images on the page.
             Write-verbose "Get-PImages : ---------------------------- Checking for images on page."
 
             $WP.HTML.images | where src -match '\d*\.jpg' | foreach {
@@ -51,150 +52,67 @@
 
                 Write-Verbose "Get-PImages : Examining: $($_.src)"
 
+                # ----- Check if any excluded word is in the string.
+                if ( $_.src | Select-String -Pattern $ExcludedWords -NotMatch ) {                                      
 
-                # ----- Match was 
-                Write-Verbose "Get-PImage : ----- $SRC -- Does the image start with HTTP?" 
-                if ( ( $_.SRC -Match 'http:\/\/.*\/\d*\.jpg' ) -or ($_.SRC -Match 'http:\/\/.*\d*\.jpg' ) `
-                    -and ( -Not ($_.src).contains( '468x60') ) `
-                    -and ( -Not ($_.src).contains( 'anna') ) `
-                    -and ( -Not ($_.src).contains( 'atk') ) `
-                    -and ( -Not ($_.src).contains( 'backtohome') ) `
-                    -and ( -Not ($_.src).contains( 'backtohome') ) `
-                    -and ( -Not ($_.src).contains( 'banner') ) `
-                    -and ( -Not ($_.src).contains( 'bella') ) `
-                    -and ( -Not ($_.src).contains( 'big.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'box_title_main_menu') ) `
-                    -and ( -Not ($_.src).contains( '/cm/') ) `
-                    -and ( -Not ($_.src).contains( 'friends') ) `
-                    -and ( -Not ($_.src).contains( 'front') ) `
-                    -and ( -Not ($_.src).contains( 'frontpage') ) `
-                    -and ( -Not ($_.src).contains( 'gallery-') ) `
-                    -and ( -Not ($_.src).contains( 'girls/') ) `
-                    -and ( -Not ($_.src).contains( 'header') ) `
-                    -and ( -Not ($_.src).contains( 'header') ) `
-                    -and ( -Not ($_.src).contains( 'hor_') ) `
-                    -and ( -Not ($_.src).contains( 'imgs/') ) `
-                    -and ( -Not ($_.src).contains( '/img') ) `
-                    -and ( -Not ($_.src).contains( 'kris') ) `
-                    -and ( -Not ($_.src).contains( 'littlepics') ) `
-                    -and ( -Not ($_.src).contains( 'lily.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'logo') ) `
-                    -and ( -Not ($_.src).contains( 'newupdates') ) `
-                    -and ( -Not ($_.src).contains( 'nov') ) `
-                    -and ( -Not ($_.src).contains( 'oct') ) `
-                    -and ( -Not ($_.src).contains( 'paysite.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'sascha') ) `
-                    -and ( -Not ($_.src).contains( 'search') ) `
-                    -and ( -Not ($_.src).contains( 'separator') ) `
-                    -and ( -Not ($_.src).contains( 'small') ) `
-                    -and ( -Not ($_.src).contains( 'stmac.jpg') ) `
-                    -and ( -Not ($_.src).contains( 't.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'Template') ) `
-                    -and ( -Not ($_.src).contains( 'tgp') ) `
-                    -and ( -Not ($_.src).contains( 'th') ) `
-                    -and ( -Not ($_.src).contains( 'thumb' ) ) `
-                    -and ( -Not ($_.src).contains( 'updatethumbs' ) ) `
-                    -and ( -Not ($_.src).contains( 'tk_' ) ) `
-                    -and ( -Not ($_.src).contains( 'tn.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'tn2') ) `
-                    -and ( -Not ($_.src).contains( 'tn_') ) `
-                    -and ( (($_.src) -notmatch 'tn\d*\.jpg')) `
-                    -and ( -Not ($_.src).contains( 'upload') ) ) { 
-                        Write-Verbose "Get-PImages : returning full JPG Url $($_.SRC)"
+                    # ----- Match was 
+                    Write-Verbose "Get-PImage : ----- $SRC -- Does the image start with HTTP?" 
+                    if ( ( $_.SRC -Match 'http:\/\/.*\/\d*\.jpg' ) -or ($_.SRC -Match 'http:\/\/.*\d*\.jpg' ) ) { 
+                            Write-Verbose "Get-PImages : returning full JPG Url $($_.SRC)"
                       
-                        $Pics += $_.SRC
-                        Write-Verbose "Get-PImages : -----Found: $($_.SRC)"
-                        Write-Output $_.SRC 
-                }
+                            $Pics += $_.SRC
+                            Write-Verbose "Get-PImages : -----Found: $($_.SRC)"
+                            Write-Output $_.SRC 
+                    }
 
-                Write-Verbose "Get-PImage : ----- $($_.src) -- No HTTP"                  
-                If ( ($_.SRC -notmatch 'http:\/\/.*' ) `
-                    -and ( -Not ($_.src).contains( '..') ) `
-                    -and ( -Not ($_.src).contains( '468x60') ) `
-                    -and ( -Not ($_.src).contains( 'anna') ) `
-                    -and ( -Not ($_.src).contains( 'atk') ) `
-                    -and ( -Not ($_.src).contains( 'backtohome') ) `
-                    -and ( -Not ($_.src).contains( 'banner') ) `
-                    -and ( -Not ($_.src).contains( 'bella') ) `
-                    -and ( -Not ($_.src).contains( 'big.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'box_title_main_menu') ) `
-                    -and ( -Not ($_.src).contains( '/cm/') ) `
-                    -and ( -Not ($_.src).contains( 'friends') ) `
-                    -and ( -Not ($_.src).contains( 'front') ) `
-                    -and ( -Not ($_.src).contains( 'gallery-') ) `
-                    -and ( -Not ($_.src).contains( 'girls/') ) `
-                    -and ( -Not ($_.src).contains( 'header') ) `
-                    -and ( -Not ($_.src).contains( 'hor_') ) `
-                    -and ( -Not ($_.src).contains( 'imgs/') ) `
-                    -and ( -Not ($_.src).contains( '/img') ) `
-                    -and ( -Not ($_.src).contains( 'kris') ) `
-                    -and ( -Not ($_.src).contains( 'lily.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'logo') ) `
-                    -and ( -Not ($_.src).contains( 'newupdates') ) `
-                    -and ( -Not ($_.src).contains( 'nov') ) `
-                    -and ( -Not ($_.src).contains( 'oct') ) `
-                    -and ( -Not ($_.src).contains( 'paysite.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'sascha') ) `
-                    -and ( -Not ($_.src).contains( 'search') ) `
-                    -and ( -Not ($_.src).contains( 'separator') ) `
-                    -and ( -Not ($_.src).contains( 'small') ) `
-                    -and ( -Not ($_.src).contains( 'stmac.jpg') ) `
-                    -and ( -Not ($_.src).contains( 't.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'Template') ) `
-                    -and ( -Not ($_.src).contains( 'tgp') ) `
-                    -and ( -Not ($_.src).contains( 'th') ) `
-                    -and ( -Not ($_.src).contains( 'tk_' ) ) `
-                    -and ( -Not ($_.src).contains( 'tn.jpg') ) `
-                    -and ( -Not ($_.src).contains( 'tn2') ) `
-                    -and ( (($_.src) -notmatch 'tn\d*\.jpg')) `
-                    -and ( -Not ($_.src).contains( 'thumb' ) ) `
-                    -and ( -Not ($_.src).contains( 'updatethumbs' ) ) `
-                    -and ( -Not ($_.src).contains( 'upload') ) ) {
+                    Write-Verbose "Get-PImage : ----- $($_.src) -- No HTTP"                  
+                    If ( ($_.SRC -notmatch 'http:\/\/.*' ) ) {
                             
-                            $PotentialIMG = $_.SRC
+                                $PotentialIMG = $_.SRC
                             
-                            # ----- Check if the link contains /tn_.  if so remove and process image
-                            if ( $PotentialIMG.Contains( "\/tn_") ) {
-                                $PotentialIMG = $PotentialIMG.Replace( '/tn_','/')
-                            }
+                                # ----- Check if the link contains /tn_.  if so remove and process image
+                                if ( $PotentialIMG.Contains( "\/tn_") ) {
+                                    $PotentialIMG = $PotentialIMG.Replace( '/tn_','/')
+                                }
 
-                            Write-Verbose "Get-PImages : JPG Url is relitive path.  Need base/root."
-                            $Root = Get-HTMLBaseUrl -Url $WP.Url -Verbose
-                            if ( -Not $Root ) { $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose }
+                                Write-Verbose "Get-PImages : JPG Url is relitive path.  Need base/root."
+                                $Root = Get-HTMLBaseUrl -Url $WP.Url -Verbose
+                                if ( -Not $Root ) { $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose }
 
-                            # ----- Check to see if valid URL.  Should not contain: //
-                            if ( ("$Root$_" | select-string -Pattern '\/\/' -allmatches).matches.count -gt 1 )  {
-                                Write-Verbose "Get-PImages : Illegal character, Getting Root"
-                                $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose
-                            }
+                                # ----- Check to see if valid URL.  Should not contain: //
+                                if ( ("$Root$_" | select-string -Pattern '\/\/' -allmatches).matches.count -gt 1 )  {
+                                    Write-Verbose "Get-PImages : Illegal character, Getting Root"
+                                    $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose
+                                }
 
                            
 
-                            # ----- Checking if image is a valid path
-                           # $URL = "$Root$($_.SRC)"
-                          #  Write-Verbose "+++++++++++$Root$($_.SRC)"
-                            if ( Test-IEWebPath -Url "$Root$PotentialIMG" -ErrorAction SilentlyContinue ) {
-                                    $Pics += "$Root$PotentialIMG"
+                                # ----- Checking if image is a valid path
+                               # $URL = "$Root$($_.SRC)"
+                              #  Write-Verbose "+++++++++++$Root$($_.SRC)"
+                                if ( Test-IEWebPath -Url "$Root$PotentialIMG" -ErrorAction SilentlyContinue ) {
+                                        $Pics += "$Root$PotentialIMG"
 
-                                    Write-Verbose "-----Found: $Root$PotentialIMG"
-                                    Write-Output "$Root$PotentialIMG"
-                                }
-                                else {
-                                    Write-Verbose "Get-PImage : Root/SRC is not valid.  Checking Root/JPG"
-                                    $JPG = $PotentialIMG | Select-String -Pattern '([^\/]+.jpg)' | foreach { $_.Matches[0].value }
-                                    if ( Test-IEWebPath -Url $Root$JPG ) {
-                                        Write-Verbose "-----Found: $Root$JPG"
-                                        Write-Output $Root$JPG
+                                        Write-Verbose "-----Found: $Root$PotentialIMG"
+                                        Write-Output "$Root$PotentialIMG"
                                     }
+                                    else {
+                                        Write-Verbose "Get-PImage : Root/SRC is not valid.  Checking Root/JPG"
+                                        $JPG = $PotentialIMG | Select-String -Pattern '([^\/]+.jpg)' | foreach { $_.Matches[0].value }
+                                        if ( Test-IEWebPath -Url $Root$JPG ) {
+                                            Write-Verbose "-----Found: $Root$JPG"
+                                            Write-Output $Root$JPG
+                                        }
+                                }
                             }
-                        }
-                        Else {
-                            Write-Verbose "Get-PImages :  Image not found $($_.SRC)"
-                            $_.SRC
-                            write-Verbose "fluffernuter"
+                            Else {
+                                Write-Verbose "Get-PImages :  Image not found $($_.SRC)"
+                                $_.SRC
+                                write-Verbose "fluffernuter"
 
                         
                             
+                    }
                 }
 
             }
