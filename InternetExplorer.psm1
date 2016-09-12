@@ -406,31 +406,19 @@ Function Get-IEWebVideo {
 
     [CmdletBinding()]
     param (
-        [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
+        [Parameter(ValueFromPipeline=$True )]
         [PSCustomObject[]]$WebPage
     )
 
     Begin {
-        Write-Verbose ""
-        # ----- Set Debug to continue without prompting: http://learn-powershell.net/2014/06/01/prevent-write-debug-from-bugging-you/
-        If ($PSBoundParameters['Debug']) {
-            $DebugPreference = 'Continue'
-        }
-        Write-Debug "WebPage passed in"
-        Write-Debug ($WebPage | Out-String)
-
+        Write-Verbose "Getting Videos from Webpage"
         $WebVideo = @()
     }
 
-
- 
     Process {
         foreach ( $WP in $WebPage ) {
-            Write-Verbose ""
-            Write-Verbose "Getting Videos from $($WP.LocationUrl)..."
-            Write-Debug ( $WP | Out-String )
-            #$WP | FL *   # ------ Don't know why but this won't work without this line.
-            
+            Write-Verbose "Getting Videos from $($WP.Url)..."
+
             $BreakError = $False
             $WebVideo = $Null
 
@@ -541,15 +529,22 @@ Function Get-IEWebVideo {
                     $WebVideo = $Matches[1]
                 }
 
+                ".swf" {
+                    Write-Warning "Haven't figured out how to download flash SWF Videos yet"
+                }
+
 
             }
         
             Write-Verbose "Video Url:"
             Write-Verbose ($WebVideo | Out-String)
-            Write-Output $WebVideo        
+            Write-Output $WebVideo    
         }
     }
 
+    End {
+        Write-Verbose "Ending Get-WebVideo --------------------------------------------"
+    }
 }
 
 #------------------------------------------------------------------------------
