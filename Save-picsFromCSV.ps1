@@ -57,6 +57,7 @@ foreach ( $L in $Links ) {
 
     $Images = $Null
 
+
     $Images = $IE | Get-PImages -verbose
     
     "-----------"   

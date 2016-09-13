@@ -31,7 +31,8 @@
    
 
     process {
-        Write-Verbose "Recurse Level : $RecurseLevel"
+        Write-Verbose "Get-PImage : Recurse Level : $RecurseLevel"
+        Write-Verbose "Adding recurse level"
         $RecurseLevel ++
         
         ForEach ( $WP in $WebPage ) {
@@ -189,7 +190,7 @@
                             Write-Verbose "Get-PImages : ---------------------------- Following Link: $Root$HREF"
                             Try {
                                     # ----- Check if we are recursing and how deep we have gone.
-                                    if ( $RecurseLevel -le $MaxRecurseLevel ) { 
+                                    if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
                                         Write-Output ( Get-IEWebPage -Url $Root$HREF -Visible | Get-PImages -Verbose )
                                     }
                                 }
@@ -198,7 +199,7 @@
                                     $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose 
                                     Write-Verbose "Error -- Will Try : $Root$HREF "
                                     # ----- Check if we are recursing and how deep we have gone.
-                                    if ( $RecurseLevel -le $MaxRecurseLevel ) { 
+                                    if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
                                         Write-Output ( Get-IEWebPage -Url $Root$HREF -Visible | Get-PImages -Verbose )
                                     }
 
@@ -211,7 +212,7 @@
 
                             # Write-Output (Get-IEWebPage -url $HREF -Visible | Get-Pics -Verbose)
                             # ----- Check if we are recursing and how deep we have gone.
-                            if ( $RecurseLevel -le $MaxRecurseLevel ) { 
+                            if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
                                 Write-Output (Get-IEWebPage -url $HREF -Visible | Get-PImages -Verbose)
                             }
                     }
@@ -229,8 +230,10 @@
                     Write-Verbose "Following Link: $HREF"
                     #Get-IEWebPage -Url $HREF -visible
 
+                    Write-Verbose "RecurseLevel = $RecurseLevel"
+                    Write-Verbose "MaxRecurseLevel = $MaxRecurseLevel"
                     # ----- Check if we are recursing and how deep we have gone.
-                    if ( $RecurseLevel -le $MaxRecurseLevel ) { 
+                    if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
                         $Pics = Get-IEWebPage -url $HREF -Visible | Get-PImages -Verbose
                     }
 
