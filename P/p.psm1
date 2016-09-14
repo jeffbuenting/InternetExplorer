@@ -187,6 +187,22 @@
                     if ( -not ( $_ -match 'http:\/\/' ) ) { 
                             $Root = Get-HTMLBaseUrl -Url $WP.Url -Verbose
                             if ( -Not $Root ) { $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose }
+                            # ----- Test if webpage exists
+                            if ( Test-IEWebPath -url $Root$HREF ) {
+                                write-Verbose "Get-PImage : Malformed web page.  checking for //"
+                                # ---- checking if // is in the middle of string
+                                if ( $Root[$Root.Lenght()-1] -eq '/' -and $HREF[0] -eq '/' ) {
+                                    Write-Verbose "Get-PImage : Removing //"
+                                    $HREF = $HREF.substring[1] 
+                                }
+
+                                if ( -Not (Test=IEWebPath -Url $Root$HREF) ) {
+                                    Throw "Get-PImage : WebPage does not exist $Root$HREF"
+                                } 
+                            }
+
+
+
                             Write-Verbose "Get-PImages : ---------------------------- Following Link: $Root$HREF"
                             Try {
                                     # ----- Check if we are recursing and how deep we have gone.
