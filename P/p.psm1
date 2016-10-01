@@ -25,7 +25,7 @@
                     'oct',
                     'paysite.jpg',
                     'sascha','search','separator','small','stmac.jpg',
-                    't.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_',
+                    't.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_','/th'
                     'webcam'
     }
    
