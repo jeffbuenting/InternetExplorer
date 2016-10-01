@@ -19,7 +19,7 @@ try {
 }
 
 
-$Url = 'http://xxxbunker.com/gianna_michaels_has_huge_tits'
+$Url = 'http://www.mydailytube.com/video/football-drills-15167.html'
 
 $Url | Foreach {
 

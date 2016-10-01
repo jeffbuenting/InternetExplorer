@@ -25,7 +25,7 @@
                     'oct',
                     'paysite.jpg',
                     'sascha','search','separator','small','stmac.jpg',
-                    't.jpg','Template','tgp','th','thumb','tk_','tn.jpg','tn2','tn_',
+                    't.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_',
                     'webcam'
     }
    
@@ -34,7 +34,7 @@
         Write-Verbose "Get-PImage : Recurse Level : $RecurseLevel"
         Write-Verbose "Adding recurse level"
         $RecurseLevel ++
-        
+
         ForEach ( $WP in $WebPage ) {
 
             Write-Verbose "Get-PImages : -------------------------------------------------------------------------------------"
@@ -56,64 +56,68 @@
                 # ----- Check if any excluded word is in the string.
                 if ( $_.src | Select-String -Pattern $ExcludedWords -NotMatch ) {                                      
 
-                    # ----- Match was 
-                    Write-Verbose "Get-PImage : ----- $SRC -- Does the image start with HTTP?" 
-                    if ( ( $_.SRC -Match 'http:\/\/.*\/\d*\.jpg' ) -or ($_.SRC -Match 'http:\/\/.*\d*\.jpg' ) ) { 
-                            Write-Verbose "Get-PImages : returning full JPG Url $($_.SRC)"
+                        # ----- Match was 
+                        Write-Verbose "Get-PImage : ----- $SRC -- Does the image start with HTTP?" 
+                        if ( ( $_.SRC -Match 'http:\/\/.*\/\d*\.jpg' ) -or ($_.SRC -Match 'http:\/\/.*\d*\.jpg' ) ) { 
+                                Write-Verbose "Get-PImages : returning full JPG Url $($_.SRC)"
                       
-                            $Pics += $_.SRC
-                            Write-Verbose "Get-PImages : -----Found: $($_.SRC)"
-                            Write-Output $_.SRC 
-                    }
+                                $Pics += $_.SRC
+                                Write-Verbose "Get-PImages : -----Found: $($_.SRC)"
+                                Write-Output $_.SRC 
+                        }
 
-                    Write-Verbose "Get-PImage : ----- $($_.src) -- No HTTP"                  
-                    If ( ($_.SRC -notmatch 'http:\/\/.*' ) ) {
+                        Write-Verbose "Get-PImage : ----- $($_.src) -- No HTTP"                  
+                        If ( ($_.SRC -notmatch 'http:\/\/.*' ) ) {
                             
-                                $PotentialIMG = $_.SRC
+                                    $PotentialIMG = $_.SRC
                             
-                                # ----- Check if the link contains /tn_.  if so remove and process image
-                                if ( $PotentialIMG.Contains( "\/tn_") ) {
-                                    $PotentialIMG = $PotentialIMG.Replace( '/tn_','/')
-                                }
+                                    # ----- Check if the link contains /tn_.  if so remove and process image
+                                    if ( $PotentialIMG.Contains( "\/tn_") ) {
+                                        $PotentialIMG = $PotentialIMG.Replace( '/tn_','/')
+                                    }
 
-                                Write-Verbose "Get-PImages : JPG Url is relitive path.  Need base/root."
-                                $Root = Get-HTMLBaseUrl -Url $WP.Url -Verbose
-                                if ( -Not $Root ) { $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose }
+                                    Write-Verbose "Get-PImages : JPG Url is relitive path.  Need base/root."
+                                    $Root = Get-HTMLBaseUrl -Url $WP.Url -Verbose
+                                    if ( -Not $Root ) { $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose }
 
-                                # ----- Check to see if valid URL.  Should not contain: //
-                                if ( ("$Root$_" | select-string -Pattern '\/\/' -allmatches).matches.count -gt 1 )  {
-                                    Write-Verbose "Get-PImages : Illegal character, Getting Root"
-                                    $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose
-                                }
+                                    # ----- Check to see if valid URL.  Should not contain: //
+                                    if ( ("$Root$_" | select-string -Pattern '\/\/' -allmatches).matches.count -gt 1 )  {
+                                        Write-Verbose "Get-PImages : Illegal character, Getting Root"
+                                        $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose
+                                    }
 
                            
 
-                                # ----- Checking if image is a valid path
-                               # $URL = "$Root$($_.SRC)"
-                              #  Write-Verbose "+++++++++++$Root$($_.SRC)"
-                                if ( Test-IEWebPath -Url "$Root$PotentialIMG" -ErrorAction SilentlyContinue ) {
-                                        $Pics += "$Root$PotentialIMG"
+                                    # ----- Checking if image is a valid path
+                                   # $URL = "$Root$($_.SRC)"
+                                  #  Write-Verbose "+++++++++++$Root$($_.SRC)"
+                                    if ( Test-IEWebPath -Url "$Root$PotentialIMG" -ErrorAction SilentlyContinue ) {
+                                            $Pics += "$Root$PotentialIMG"
 
-                                        Write-Verbose "-----Found: $Root$PotentialIMG"
-                                        Write-Output "$Root$PotentialIMG"
-                                    }
-                                    else {
-                                        Write-Verbose "Get-PImage : Root/SRC is not valid.  Checking Root/JPG"
-                                        $JPG = $PotentialIMG | Select-String -Pattern '([^\/]+.jpg)' | foreach { $_.Matches[0].value }
-                                        if ( Test-IEWebPath -Url $Root$JPG ) {
-                                            Write-Verbose "-----Found: $Root$JPG"
-                                            Write-Output $Root$JPG
+                                            Write-Verbose "-----Found: $Root$PotentialIMG"
+                                            Write-Output "$Root$PotentialIMG"
                                         }
+                                        else {
+                                            Write-Verbose "Get-PImage : Root/SRC is not valid.  Checking Root/JPG"
+                                            $JPG = $PotentialIMG | Select-String -Pattern '([^\/]+.jpg)' | foreach { $_.Matches[0].value }
+                                            if ( Test-IEWebPath -Url $Root$JPG ) {
+                                                Write-Verbose "-----Found: $Root$JPG"
+                                                Write-Output $Root$JPG
+                                            }
+                                    }
                                 }
-                            }
-                            Else {
-                                Write-Verbose "Get-PImages :  Image not found $($_.SRC)"
-                                $_.SRC
-                                write-Verbose "fluffernuter"
+                                Else {
+                                    Write-Verbose "Get-PImages :  Image not found $($_.SRC)"
+                                    $_.SRC
+                                    write-Verbose "fluffernuter"
 
                         
                             
+                        }
                     }
+                    else {
+                        Write-Verbose "$($_.SRC) matches:"
+                        Write-Verbose "$($_.src | Select-String -Pattern $ExcludedWords -NotMatch | Out-String ) "
                 }
 
             }
@@ -176,8 +180,36 @@
 
             # ----- Do not process if we have already followed one link ( stop if the URL is PHP )
             if ( $WP.Url -notmatch "\d+\.php" ) {
-                $WP.HTML.Links | where { ($_.href -like "*.html") -or ($_.HREF -match "\d+\.php") } | Select-Object -ExpandProperty href | Write-Verbose
-                $WP.HTML.Links | where { ($_.href -like "*.html") -or ($_.HREF -match "\d+\.php") } | Select-Object -ExpandProperty href | foreach {
+                $Root = Get-HTMLBaseUrl -Url $WP.Url -Verbose
+                if ( -Not $Root ) { $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose }
+
+                $HTMLLinks = $WP.HTML.Links | where { ($_.href -like "*.html") -or ($_.HREF -match "\d+\.php") } | Select-Object -ExpandProperty href 
+                
+                # ----- Check if Full Link (http) rood is the same
+                $L = @()
+                Foreach ( $H in $HTMLLinks ) {
+                    write-Verbose "Checking $H"
+                    if ( $H -match 'http:\/\/' ) {
+                            Write-Verbose "Full HTTP Url"
+                            $RootForLink = Get-HTMLBaseUrl -Url $H -Verbose
+                            if ( $Root -eq $RootForLink ) { 
+                                    Write-Verbose "$Root = $RootForLink"
+                                    $L += $H
+                                }
+                                Else {
+                                    Write-Verbose "$Root != $RootForLink"
+                            }
+                        }
+                        else {
+                            Write-Verbose "Not full HTTP Url"
+                            $L += $H
+                    }
+
+                }
+
+                Write-Verbose `n$L
+
+                $L | foreach {
                     Write-Verbose "`n"
                     Write-Verbose "Can I follow : $_"
                 
@@ -207,7 +239,7 @@
                             Try {
                                     # ----- Check if we are recursing and how deep we have gone.
                                     if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
-                                        Write-Output ( Get-IEWebPage -Url $Root$HREF -Visible | Get-PImages -Verbose )
+                                        Write-Output ( Get-IEWebPage -Url $Root$HREF -Visible | Get-PImages -RecurseLevel $RecurseLevel -Verbose )
                                     }
                                 }
                                 Catch {
@@ -216,7 +248,7 @@
                                     Write-Verbose "Error -- Will Try : $Root$HREF "
                                     # ----- Check if we are recursing and how deep we have gone.
                                     if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
-                                        Write-Output ( Get-IEWebPage -Url $Root$HREF -Visible | Get-PImages -Verbose )
+                                        Write-Output ( Get-IEWebPage -Url $Root$HREF -Visible | Get-PImages -RecurseLevel $RecurseLevel -Verbose )
                                     }
 
                             }
@@ -229,7 +261,7 @@
                             # Write-Output (Get-IEWebPage -url $HREF -Visible | Get-Pics -Verbose)
                             # ----- Check if we are recursing and how deep we have gone.
                             if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
-                                Write-Output (Get-IEWebPage -url $HREF -Visible | Get-PImages -Verbose)
+                                Write-Output (Get-IEWebPage -url $HREF -Visible | Get-PImages -RecurseLevel $RecurseLevel -Verbose)
                             }
                     }
                 }
@@ -250,7 +282,7 @@
                     Write-Verbose "MaxRecurseLevel = $MaxRecurseLevel"
                     # ----- Check if we are recursing and how deep we have gone.
                     if ( $RecurseLevel -le $MaxRecurseLevel+1 ) { 
-                        $Pics = Get-IEWebPage -url $HREF -Visible | Get-PImages -Verbose
+                        $Pics = Get-IEWebPage -url $HREF -Visible | Get-PImages -RecurseLevel $RecurseLevel -Verbose
                     }
 
                     Write-Output $Pics
