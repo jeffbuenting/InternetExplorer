@@ -13,19 +13,21 @@
     Begin {
         # ----- List of words to ignore if they are part of an image link
         $ExcludedWords = '468x60','anna','atk',
-                    'backtohome','backtohome','banner','bella','big.jpg','box_title_main_menu',
+                    '/b/','backtohome','backtohome','banner','big.jpg','bn.jpg','bookmark','box_title_main_menu',
                     '/cm/',
-                    'friends','front','frontpage',
+                    'destinymoody.jpg',
+                    'friends','front','frontpage','footer',
                     'gallery-','girls/',
                     'header','header','hor_',
                     'imgs/','/img',
                     'kris',
-                    'littlepics','lily.jpg','logo',
+                    'littlepics','lily.jpg','logo','lflash.jpg',
                     'newupdates','nov',
                     'oct',
                     'paysite.jpg',
                     'sascha','search','separator','small','stmac.jpg',
-                    't.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_','/th'
+                    't.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_','/th',
+                    'upload/',
                     'webcam'
     }
    
@@ -117,7 +119,7 @@
                     }
                     else {
                         Write-Verbose "$($_.SRC) matches:"
-                        Write-Verbose "$($_.src | Select-String -Pattern $ExcludedWords -NotMatch | Out-String ) "
+                        Write-Verbose "Excluded = $($_.src | Select-String -Pattern $ExcludedWords -NotMatch | Out-String ) "
                 }
 
             }
@@ -223,7 +225,7 @@
                             if ( Test-IEWebPath -url $Root$HREF ) {
                                 write-Verbose "Get-PImage : Malformed web page.  checking for //"
                                 # ---- checking if // is in the middle of string
-                                if ( $Root[$Root.Lenght()-1] -eq '/' -and $HREF[0] -eq '/' ) {
+                                if ( $Root[$Root.Length()-1] -eq '/' -and $HREF[0] -eq '/' ) {
                                     Write-Verbose "Get-PImage : Removing //"
                                     $HREF = $HREF.substring[1] 
                                 }

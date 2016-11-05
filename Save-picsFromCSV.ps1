@@ -1,7 +1,7 @@
 ﻿try {
         import-module C:\Scripts\InternetExporer\InternetExplorer.psd1 -force -ErrorAction Stop
-        Import-Module C:\scripts\InternetExporer\p\p.psd1 -force -ErrorAction Stop
         Import-Module C:\scripts\FileSystem\filesystem.psd1 -force -ErrorAction Stop
+        Import-Module C:\scripts\InternetExporer\p\p.psd1 -force -ErrorAction Stop
         Import-Module c:\scripts\popup\popup.psm1 -force -ErrorAction Stop
         Import-Module C:\scripts\Shortcut\Shortcut.psm1 -Force -ErrorAction Stop
     }
