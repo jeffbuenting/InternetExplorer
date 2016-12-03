@@ -19,23 +19,23 @@ try {
 }
 
 
-$Url = 'http://www.mydailytube.com/video/football-drills-15167.html'
+$Url = 'http://www.nnconnect.com/nikki_sims_video/power_outtage.html'
 
 $Url | Foreach {
 
     $WebPage = Get-IEWebPage -Url $_ -Visible -verbose
 
-    $WebPage
+    #$WebPage
 
     
     "--------------------------------------------------------------------------------------------------------------------------------------------------------"
         
     Try {
-            #$DestinationPath = Get-FileorFolderPath -InitialDirectory 'p:\' -ErrorAction Stop
+            $DestinationPath = Get-FileorFolderPath -InitialDirectory 'p:\' -ErrorAction Stop
 
-           # Write-Host "Destination Path = $DestinationPath" -ForegroundColor Green
+            Write-Host "Destination Path = $DestinationPath" -ForegroundColor Green
 
-            $WebPage | gm
+          #  $WebPage | gm
 
             "+++++++++++++"
 
@@ -43,7 +43,7 @@ $Url | Foreach {
 
             $Videos
     
-  #          $Videos | Save-IEWebVideo -Destination $DestinationPath -Priority 'ForeGround' -ErrorAction Stop
+            $Videos | Save-IEWebVideo -Destination $DestinationPath -Priority 'ForeGround' -ErrorAction Stop
         }
         Catch {
             $ExceptionMessage = $_.Exception.Message
@@ -57,19 +57,19 @@ $Url | Foreach {
     $Link = $_
 
     Write-Host "Saving Shortcut"
- #   New-Shortcut -Link $Link -Path $DestinationPath -Verbose
+    New-Shortcut -Link $Link -Path $DestinationPath -Verbose
 
     Write-Host "Opening Destination to double check if the images saved correctly" -ForegroundColor Green
- #   explorer $DestinationPath
+    explorer $DestinationPath
 
- #   if ( (New-Popup -Message "Did it Save Correctly" -Title 'No errors' -Time 300 -Buttons 'YesNo') -eq 6 ) {
- #       write-host "Didn't Save,Will write to log" -ForegroundColor Green
- #       $ImageSaveIssue += $L
- #   }
+    if ( (New-Popup -Message "Did it Save Correctly" -Title 'No errors' -Time 300 -Buttons 'YesNo') -eq 6 ) {
+        write-host "Didn't Save,Will write to log" -ForegroundColor Green
+        $ImageSaveIssue += $L
+    }
 
     #$WebPage | gm
 
-  #  Close-IEWebPage -WebPage $WebPage -Verbose
+    Close-IEWebPage -WebPage $WebPage -Verbose
 }
 
 

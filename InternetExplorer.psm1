@@ -432,13 +432,16 @@ Function Get-IEWebVideo {
             Write-Verbose "Checking Tags"
             Write-Verbose "               Source"
             
-            # ----- PinkVelvetVault, PornoXO
+           $WP.HTML.allelements | where tagname -eq source
+           
+
             $WebVideo = $WP.HTML.allelements | where tagname -eq source | where { ($_.src -like '*.m4v') -or ( $_.src -like '*.webm' ) -or ( $_.src -like '*.mp4') } | Select-object -ExpandProperty src
             $WebVideo += $wp.html.links | where href -like "*.wmv" | Select-Object -ExpandProperty href
             
             $Videos = @()
             Write-Verbose "Checking if WebVideo contains HTTP"
             foreach ( $V in $WebVideo ) {
+                Write-Verbose "WebVideo = $V"
                 if ( $WebVideo -notcontains 'http://' ) {
                     Write-verbose "No Http add base url"
                     $BaseUrl = $WP.Url -replace 'index.html',''
@@ -452,6 +455,13 @@ Function Get-IEWebVideo {
 
             switch -Regex ( $WP.HTML.RawContent ) {
 
+                'file:"(\S+mp4[^"]*)' {
+                    Write-Verbose 'file:"(\S+mp4[^"]*)'
+                    Write-Verbose "Found: $($Matches[0])"
+                    
+                    $WebVideo = $Matches[1]
+                }
+                
                 """file"": ""(\S+)""" {
                     Write-Verbose """file"": ""(\S+)"""
                     Write-Verbose "Found: $($Matches[0])"
@@ -469,12 +479,7 @@ Function Get-IEWebVideo {
                     break
                 }
 
-                'file:"(\S+mp4[^"]*)' {
-                    Write-Verbose 'file:"(\S+mp4[^"]*)'
-                    Write-Verbose "Found: $($Matches[0])"
-                    
-                    $WebVideo = $Matches[1]
-                }
+                
 
                 "video_url: '(\S+.mp4)" {
                     Write-Verbose "video_url: '(\S+.mp4)"
@@ -529,9 +534,9 @@ Function Get-IEWebVideo {
                     $WebVideo = $Matches[1]
                 }
 
-                ".swf" {
-                    Write-Warning "Haven't figured out how to download flash SWF Videos yet"
-                }
+             #   ".swf" {
+             #       Write-Warning "Haven't figured out how to download flash SWF Videos yet"
+             #   }
 
 
             }
