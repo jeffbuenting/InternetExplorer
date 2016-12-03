@@ -12,26 +12,33 @@
 
     Begin {
         # ----- List of words to ignore if they are part of an image link
-        $ExcludedWords = '/17_','/7_','468x60','anna','atk',
+
+        $ExcludedWords = '0003.jpg',
+                    '22962675.jpg','31504128.jpg','31273357.jpg','5009.jpg','/17_','/7_','468x60','6960553.jpg','6833789.jpg','6833789.jpg','6732258.jpg',
+                    '7112430','7060344.jpg','7083247.jpg','7113434',
+                    'ajinx.jpg','akiss.jpg','ally1.jpg','anna','atk','allstarban.jpg',
                     '/b/','backtohome','backtohome','banner','bella.jpg','bellaclu','big.jpg','bn.jpg','bookmark','box_title_main_menu','bulkpic',
-                    '/cm/',
+                    '/cm/','chase.jpg','cosmid.jpg',
                     'destinymoody.jpg',
                     'eyr.jpg',
-                    'friends','front','frontpage','footer',
+                    'friends','front','frontpage','footer','fowler.jpg',
                     'gallery-','girls/',
                     'himg.jpg','header','header','hor_',
-                    'imgs/','/img','images/15',
-                    'kris',
-                    'littlepics','lily.jpg','logo','lflash.jpg',
-                    'morazzia.jpg',
-                    'newupdates','nov',
+                    'iblowjob.jpg','/index_','imgs/','/img','images/15',
+                    'kris','karinew.jpg',
+                    'littlepics','lia.jpg','lily.jpg','live1.jpg','logo','louise.jpg','lflash.jpg',
+                    'makenzie10.jpg','morazzia.jpg','m1.nsimg.net','myboobs.jpg',
+                    'newupdates','ngg','nov','ntyler.jpg',
                     'oct','offer',
-                    'paysite.jpg','paysite_icons',
+                    'paris.jpg','paysite.jpg','paysite_icons','pinup.jpg','pinupfiles.jpg',
                     'ridol.jpg','robyn.jpg',
-                    'sascha','search','separator','small','spring.jpg','stmac.jpg',
+                    'sascha','Screen-Shot','search','separator','simsnew.jpg','small','snude.jpg','spinchix.jpg','spring.jpg','stmac.jpg',
                     't.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_','/th',
                     'upload/',
-                    'webcam'
+                    'webcam',
+                    'ytease.jpg','ycake.jpg',
+                    'zishy.jpg'
+
     }
    
 
@@ -113,7 +120,7 @@
                                 }
                                 Else {
                                     Write-Verbose "Get-PImages :  Image not found $($_.SRC)"
-                                    $_.SRC
+                                    write-verbose "$_.SRC"
                                     write-Verbose "fluffernuter"
 
                         
@@ -189,7 +196,7 @@
                 if ( -Not $Root ) { $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose }
 
                 $HTMLLinks = $WP.HTML.Links | where { ($_.href -like "*.html") -or ($_.HREF -match "\d+\.php") } | Select-Object -ExpandProperty href 
-                
+                 
                 # ----- Check if Full Link (http) rood is the same
                 $L = @()
                 Foreach ( $H in $HTMLLinks ) {
