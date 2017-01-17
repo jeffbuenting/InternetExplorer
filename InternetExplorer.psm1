@@ -451,7 +451,7 @@ Function Get-IEWebVideo {
             $WebVideo = $Videos
 
                 
-
+            Write-Verbose "Checking HTML Code"
 
             switch -Regex ( $WP.HTML.RawContent ) {
 

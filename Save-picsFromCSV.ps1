@@ -78,7 +78,7 @@ foreach ( $L in $Links ) {
             Write-Host "Opening Destination to double check if the images saved correctly" -ForegroundColor Green
             explorer $DestinationPath
 
-            if ( (New-Popup -Message "Did it Save Correctly" -Title 'No errors' -Time 300 -Buttons 'YesNo') -eq 6 ) {
+            if ( (New-Popup -Message "Did it Save Correctly" -Title 'No errors' -Time 60 -Buttons 'YesNo') -eq 6 ) {
                 write-host "Didn't Save,Will write to log" -ForegroundColor Green
                 $ImageSaveIssue += $L
             }

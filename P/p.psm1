@@ -12,33 +12,37 @@
 
     Begin {
         # ----- List of words to ignore if they are part of an image link
-
-        $ExcludedWords = '0003.jpg',
-                    '22962675.jpg','31504128.jpg','31273357.jpg','5009.jpg','/17_','/7_','468x60','6960553.jpg','6833789.jpg','6833789.jpg','6732258.jpg',
-                    '7112430','7060344.jpg','7083247.jpg','7113434',
-                    'ajinx.jpg','akiss.jpg','ally1.jpg','anna','atk','allstarban.jpg',
-                    '/b/','backtohome','backtohome','banner','bella.jpg','bellaclu','big.jpg','bn.jpg','bookmark','box_title_main_menu','bulkpic',
+        $ExcludedWords = '-set.jpg',
+                    '0003.jpg',
+                    '22962675.jpg','31504128.jpg','31273357.jpg','5009.jpg','/17_','/7_','468x60',
+                    '60_001.jpg','6960553.jpg','6833789.jpg','6833789.jpg','6732258.jpg',
+                    '7112430','7060344.jpg','7083247.jpg','7113434','400.jpg',
+                    '80-7.jpg',
+                    'ajinx.jpg','akiss.jpg','ally1.jpg','anna','atk','allstarban.jpg','lstar.jpg','ahmc.jpg','antonella.jpg',
+                    '/b/','backtohome','backtohome','banner','bella.jpg','bellaclu','big.jpg','bn.jpg','bookmark','box_title_main_menu','bulkpic','bianca1.jpg',
+                    'baberoad.jpg','bann-01b.jpg',
                     '/cm/','chase.jpg','cosmid.jpg',
-                    'destinymoody.jpg',
-                    'eyr.jpg',
-                    'friends','front','frontpage','footer','fowler.jpg',
-                    'gallery-','girls/',
-                    'himg.jpg','header','header','hor_',
-                    'iblowjob.jpg','/index_','imgs/','/img','images/15',
-                    'kris','karinew.jpg',
-                    'littlepics','lia.jpg','lily.jpg','live1.jpg','logo','louise.jpg','lflash.jpg',
-                    'makenzie10.jpg','morazzia.jpg','m1.nsimg.net','myboobs.jpg',
+                    'nymoody.jpg','ddfyes.jpg','dannii.jpg',
+                    'eyr.jpg','ecole.jpg','egasson.jpg',
+                    'friends','front','frontpage','footer','fowler.jpg','ftvm.jpg','freckles.jpg',
+                    'gallery-','gallary_','girls/','girlsway.jpg','gainsize.jpg',
+                    'himg.jpg','header','header2','hor_',
+                    'iblowjob.jpg','/index_','imgs/','/img','images/15','inude.jpg',
+                    'jenann.jpg',
+                    'kris','karinew.jpg','kissban.jpg',
+                    'littlepics','lia.jpg','lily.jpg','live1.jpg','logo','louise.jpg','lflash.jpg','lucyv.jpg',
+                    'makenzie10.jpg','morazzia.jpg','m1.nsimg.net','myboobs.jpg','mercedez.jpg','more-galleries.jpg',
                     'newupdates','ngg','nov','ntyler.jpg',
-                    'oct','offer',
+                    'oct','offer','officefan.jpg',
                     'paris.jpg','paysite.jpg','paysite_icons','pinup.jpg','pinupfiles.jpg',
                     'ridol.jpg','robyn.jpg',
-                    'sascha','Screen-Shot','search','separator','simsnew.jpg','small','snude.jpg','spinchix.jpg','spring.jpg','stmac.jpg',
-                    't.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_','/th',
+                    'sascha','Screen-Shot','search','separator','simsnew.jpg','slide','small','snude.jpg','spinchix.jpg','spring.jpg','stmac.jpg','sdavies.jpg',
+                    'spunky.jpg',
+                    't.jpg','tanude.jpg','Template','tgp','thumb','tk_','tn.jpg','tn2','tn_','/th','/tn','tessa.jpg',
                     'upload/',
-                    'webcam',
-                    'ytease.jpg','ycake.jpg',
-                    'zishy.jpg'
-
+                    'webcam','wifey.jpg',
+                    'ytease.jpg','ycake.jpg','ywinters.jpg','yesboobs.jpg',
+                    'zara4.jpg','zishy.jpg'
     }
    
 
@@ -162,14 +166,17 @@
                 Write-Verbose "Image Found: $Root$_"
                 
                 # ----- Check to see if valid URL.  Should not contain: //
+                Write-Verbose 'Checking if Valid Url. Should Not Contain: // or #'
                 if ( (("$Root$_" | select-string -Pattern '\/\/' -allmatches).matches.count -gt 1) -or ( ("$Root$_").contains('#') ) ) {
                     Write-Verbose "Illegal character, Getting Root"
                     $Root = Get-HTMLRootUrl -Url $WP.Url -Verbose
                 }
+
+                Write-Verbose "Adding / to link if it needs one between Root and Link"
                 if (( $_[0] -ne '/' ) -and ( $Root[$Root.length - 1] -ne '/' ) ) { $HREF = "/$_" } else { $HREF = $_ }
 
                 # ----- Check if the image exists
-                Write-Verbose "Get-PImage : Checking if image path exists and correct"
+                Write-Verbose "Get-PImage : Checking if image path exists and correct : $Root$HREF"
                 if ( Test-IEWebPath -Url $Root$HREF -ErrorAction SilentlyContinue ) {
                         Write-Verbose "-----Found: $Root$HREF"
                         Write-Output $Root$HREF
@@ -177,9 +184,19 @@
                     else {
                         Write-Verbose "Get-PImage : Root/HREF is not valid.  Checking Root/JPG"
                         $JPG = $HREF | Select-String -Pattern '([^\/]+.jpg)' | foreach { $_.Matches[0].value }
+                        Write-Verbose "Root/JPG : $Root$JPG"
                         if ( Test-IEWebPath -Url $Root$JPG -ErrorAction SilentlyContinue ) {
-                            Write-Verbose "-----Found: $Root$JPG"
-                            Write-Output $Root$JPG
+                                Write-Verbose "-----Found: $Root$JPG"
+                                Write-Output $Root$JPG
+                            }
+                            else {
+                                Write-Verbose "Oops.  Removing last domain on Root and trying that With HREF."
+                                $NewRoot = $Root.substring( 0,$Root.lastindexof( '/' ) ) 
+                                Write-Verbose "Does the new img Exist : $NewRoot$HREF"
+                                if ( Test-IEWebPath -Url $NEwRoot$HREF -ErrorAction SilentlyContinue ) {
+                                    Write-Verbose "-----Found: $NewRoot$HREF"
+                                    Write-Output $NewRoot$HREF
+                                }
                         }
                 }
             }
@@ -240,7 +257,7 @@
                                     $HREF = $HREF.substring[1] 
                                 }
 
-                                if ( -Not (Test=IEWebPath -Url $Root$HREF) ) {
+                                if ( -Not (Test-IEWebPath -Url $Root$HREF) ) {
                                     Throw "Get-PImage : WebPage does not exist $Root$HREF"
                                 } 
                             }

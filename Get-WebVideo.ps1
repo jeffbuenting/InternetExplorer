@@ -19,41 +19,62 @@ try {
 }
 
 
-$Url = 'http://www.nnconnect.com/nikki_sims_video/power_outtage.html'
+$Url = 'http://www.mydailytube.com/video/new-years-resolution-ii-15597.html'
 
 $Url | Foreach {
 
     $WebPage = Get-IEWebPage -Url $_ -Visible -verbose
 
-    #$WebPage
+    #$WebPage  
 
+    Write-Verbose "WebPage : `n $($WebPage | Out-String)"
     
     "--------------------------------------------------------------------------------------------------------------------------------------------------------"
-        
-    Try {
-            $DestinationPath = Get-FileorFolderPath -InitialDirectory 'p:\' -ErrorAction Stop
+      
+    # ----- Get the folder to save the file  
+    Try 
+    {
+        $DestinationPath = Get-FileorFolderPath -InitialDirectory 'p:\' -ErrorAction Stop -Verbose
 
-            Write-Host "Destination Path = $DestinationPath" -ForegroundColor Green
+        Write-Host "Destination Path = $DestinationPath" -ForegroundColor Green
 
-          #  $WebPage | gm
+        #  $WebPage | gm
 
-            "+++++++++++++"
-
-            $Videos= $WebPage | Get-IEWebVideo -verbose -ErrorAction Stop
-
-            $Videos
-    
-            $Videos | Save-IEWebVideo -Destination $DestinationPath -Priority 'ForeGround' -ErrorAction Stop
-        }
-        Catch {
-            $ExceptionMessage = $_.Exception.Message
-            $ExceptionType = $_.Exception.GetType().FullName
-
-            Write-Verbose "WebPage : `n $($WebPage | Out-String)"
-
-            Throw "Problem Getting or Saving Video.`n`n     $ExceptionMessage`n     $ExceptionType"
+        "+++++++++++++"
+    }
+    Catch 
+    {
+        $ExceptionMessage = $_.Exception.Message
+        $ExceptionType = $_.Exception.GetType().FullName
+        Throw "Error Getting Destination path to save the video.`n`n     $ExceptionMessage`n     $ExceptionType"
     }
 
+    # ----- Find any videos on the web page
+    Try 
+    {
+        $Videos= $WebPage | Get-IEWebVideo -verbose -ErrorAction Stop
+        $Videos
+    }
+    Catch 
+    {
+        $ExceptionMessage = $_.Exception.Message
+        $ExceptionType = $_.Exception.GetType().FullName
+        Throw "Error Getting Video.`n`n     $ExceptionMessage`n     $ExceptionType"
+    }
+
+    # ----- Save the video
+    Try 
+    {  
+        $Videos | Save-IEWebVideo -Destination $DestinationPath -Priority 'ForeGround' -ErrorAction Stop
+    }
+    Catch 
+    {
+        $ExceptionMessage = $_.Exception.Message
+        $ExceptionType = $_.Exception.GetType().FullName
+        Throw "Problem Saving Video.`n`n     $ExceptionMessage`n     $ExceptionType"
+    }
+
+    # ----- Save the shortcut
     $Link = $_
 
     Write-Host "Saving Shortcut"
