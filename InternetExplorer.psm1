@@ -76,6 +76,8 @@ Function Save-IEWebImage {
         
         [String]$Destination,
 
+        [String]$DisplayName,
+
         [ValidateSet('ForeGround','High','Normal','Low',IgnoreCase=$True)]
         [String]$Priority = 'Normal',
 
@@ -95,10 +97,10 @@ Function Save-IEWebImage {
             Write-Verbose "Saving $S"
             
             If ( $Background ) {
-                    $BitsJob = Start-BitsTransfer -Source $S -Destination "$Destination\$($S.Split('/')[-1])" -DisplayName "$Destination\$($S.Split('/')[-1])" -Priority $Priority -Asynchronous
+                    $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -DisplayName $DisplayName -Priority $Priority -Asynchronous
                 }
                 else {
-                    $BitsJob = Start-BitsTransfer -Source $S -Destination "$Destination\$($S.Split('/')[-1])" -DisplayName "$Destination\$($S.Split('/')[-1])" -Priority $Priority
+                    $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -DisplayName $DisplayName -Priority $Priority
             }
             if ( $Wait ) {
                 Write-Verbose "Waiting for Bits Transfer to complete"
@@ -454,6 +456,13 @@ Function Get-IEWebVideo {
             Write-Verbose "Checking HTML Code"
 
             switch -Regex ( $WP.HTML.RawContent ) {
+
+                'file: "(.*\.flv.*)"' {
+                    Write-Verbose 'file: "(.*\.flv.*)"'
+                    Write-Verbose "Found: $($Matches[0])"
+                    
+                    $WebVideo = $Matches[1]
+                }
 
                 'file:"(\S+mp4[^"]*)' {
                     Write-Verbose 'file:"(\S+mp4[^"]*)'
