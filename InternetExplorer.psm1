@@ -76,7 +76,7 @@ Function Save-IEWebImage {
         
         [String]$Destination,
 
-        [String]$DisplayName,
+     #   [String]$DisplayName,
 
         [ValidateSet('ForeGround','High','Normal','Low',IgnoreCase=$True)]
         [String]$Priority = 'Normal',
@@ -96,12 +96,23 @@ Function Save-IEWebImage {
         Foreach ( $S in $Source ) {
             Write-Verbose "Saving $S"
             
-            If ( $Background ) {
-                    $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -DisplayName $DisplayName -Priority $Priority -Asynchronous
+            Try {
+                If ( $Background ) {
+                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Video' -Priority $Priority -Asynchronous -errorAction Stop
+                    }
+                    else {
+                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Video' -Priority $Priority -ErrorAction Stop
                 }
-                else {
-                    $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -DisplayName $DisplayName -Priority $Priority
             }
+            Catch {
+                $ExceptionMessage = $_.Exception.Message
+                $ExceptionType = $_.Exception.GetType().FullName
+                Write-Verbose "Destination = $Destination"
+                Write-Verbose "DisplayName = $DisplayName"
+
+                Throw "Save-IEVideo : Problem Saving Video.`n`n     $ExceptionMessage`n     $ExceptionType"
+            }
+
             if ( $Wait ) {
                 Write-Verbose "Waiting for Bits Transfer to complete"
                 While ( ( $BitsJob.JobState -ne 'Error' ) -or ( $BitsJob -ne 'Transferred' ) ) {
