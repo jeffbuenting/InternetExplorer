@@ -67,6 +67,9 @@ Function Save-IEWebImage {
          Get-IEWebPageImage -url $Url | Save-IEWebImage -Destination 'd:\temp\test'
 
          Copies all images retrieved from $Url web page to d:\temp\test. 
+
+    .Link
+        http://www.powershellatoms.com/basic/download-file-website-powershell/
 #>
 
     [CmdletBinding()]
@@ -98,10 +101,10 @@ Function Save-IEWebImage {
             
             Try {
                 If ( $Background ) {
-                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Video' -Priority $Priority -Asynchronous -errorAction Stop
+                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Downloading' -Priority $Priority -Asynchronous -errorAction Stop
                     }
                     else {
-                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Video' -Priority $Priority -ErrorAction Stop
+                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Downloading' -Priority $Priority -ErrorAction Stop
                 }
             }
             Catch {
@@ -110,7 +113,14 @@ Function Save-IEWebImage {
                 Write-Verbose "Destination = $Destination"
                 Write-Verbose "DisplayName = $DisplayName"
 
-                Throw "Save-IEVideo : Problem Saving Video.`n`n     $ExceptionMessage`n     $ExceptionType"
+                Write-Warning "$($MyInvocation.Line) : Problem Saving with Bits. Trying with Invoke-WebRequest.`n`n     $ExceptionMessage`n     $ExceptionType"
+
+                # ----- Extract file name from URL
+                $FileName = ($V.split('/' ))[-1]
+
+                Invoke-WebRequest  $Source -OutFile $Destination\$FileName
+
+                Write-Verobose "Done"
             }
 
             if ( $Wait ) {
