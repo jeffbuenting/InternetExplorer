@@ -101,10 +101,10 @@ Function Save-IEWebImage {
             
             Try {
                 If ( $Background ) {
-                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Downloading' -Priority $Priority -Asynchronous -errorAction Stop
+                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description $S -Priority $Priority -Asynchronous -errorAction Stop
                     }
                     else {
-                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description 'Downloading' -Priority $Priority -ErrorAction Stop
+                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description $S -Priority $Priority -ErrorAction Stop
                 }
             }
             Catch {
