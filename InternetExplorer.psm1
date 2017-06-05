@@ -90,7 +90,7 @@ Function Save-IEWebImage {
     )
 
     Begin {
-        Import-Module BitsTransfer
+       # Import-Module BitsTransfer
 
 	    if (-not (Test-Path $Destination)) { md $Destination }
     }
@@ -112,15 +112,26 @@ Function Save-IEWebImage {
                 $ExceptionType = $_.Exception.GetType().FullName
                 Write-Verbose "Destination = $Destination"
                 Write-Verbose "DisplayName = $DisplayName"
-
-                Write-Warning "$($MyInvocation.Line) : Problem Saving with Bits. Trying with Invoke-WebRequest.`n`n     $ExceptionMessage`n     $ExceptionType"
+                
+                Write-Warning "$($MyInvocation.InvocationName) : Problem Saving with Bits. Trying with Invoke-WebRequest.`n`n     $ExceptionMessage`n     $ExceptionType"
 
                 # ----- Extract file name from URL
-                $FileName = ($V.split('/' ))[-1]
+                $FileName = ($S.split('/' ))[-1]
 
-                Invoke-WebRequest  $Source -OutFile $Destination\$FileName
+                Try {
+                    #$URI = New-Object system.uri -ArgumentList $
+                    Invoke-WebRequest -uri $S -OutFile $Destination\$FileName -ErrorAction Stop
+                }
+                Catch {
+                    $ExceptionMessage = $_.Exception.Message
+                    $ExceptionType = $_.Exception.GetType().FullName
+                    Write-Verbose "Source = $Source"
+                    Write-Verbose "Destination = $Destination"
+                    Write-Verbose "FileName = $FileName"
 
-                Write-Verobose "Done"
+                    Throw "$($MyInvocation.InvocationName) : Invoke-WebRequest.`n`n     $ExceptionMessage`n     $ExceptionType"
+
+                }
             }
 
             if ( $Wait ) {
