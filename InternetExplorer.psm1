@@ -499,7 +499,7 @@ Function Get-IEWebVideo {
             Write-Verbose "Checking HTML Code"
 
 
-            $WebVideo = $WP.HTML.RawContent | Select-String -Pattern $Patterns -AllMatches | Select-Object pattern, @{N='matches';e={ $_ | foreach { $_.matches.groups.groups[1].value } }}
+            $WebVideo = ($WebPage.HTML.RawContent).split( "`n" ) | Select-String -Pattern $Patterns -AllMatches | Select-Object pattern, @{N='matches';e={ $_ | foreach { $_.matches.groups.groups[1].value } }}
 
 
 
@@ -604,7 +604,7 @@ Function Get-IEWebVideo {
                 Write-Verbose "Video = $($M.Matches)"
                 Write-Verbose "Pattern = $($M.Pattern)"
                 
-                Write-Output $M   
+                Write-Output $M.Matches
             }
         }
     }
