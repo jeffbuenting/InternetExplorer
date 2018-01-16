@@ -477,29 +477,50 @@ Function Get-IEWebVideo {
             Write-Verbose "Checking Tags"
             Write-Verbose "               Source"
             
-           $WP.HTML.allelements | where tagname -eq source
+           $WP.HTML.allelements | where tagname -eq source | Write-Verbose
            
 
-            $WebVideo = $WP.HTML.allelements | where tagname -eq source | where { ($_.src -like '*.m4v') -or ( $_.src -like '*.webm' ) -or ( $_.src -like '*.mp4') } | Select-object -ExpandProperty src
-            $WebVideo += $wp.html.links | where href -like "*.wmv" | Select-Object -ExpandProperty href
+            $File = $WP.HTML.allelements | where tagname -eq source | where { ($_.src -like '*.m4v') -or ( $_.src -like '*.webm' ) -or ( $_.src -like '*.mp4') } | Select-object -ExpandProperty src
+            $File += $wp.html.links | where href -like "*.wmv" | Select-Object -ExpandProperty href
             
+            # ----- Convert File to object
+            $WebVideo = @()
+            foreach ( $F in $File ) {
+                $Vid = New-Object -TypeName PSObject -Property (@{
+                    'Pattern' = 'SourceTag'
+                    'Matches' = $F
+                })
+                $WebVideo += $Vid
+            }
+
             $Videos = @()
             Write-Verbose "Checking if WebVideo contains HTTP"
             foreach ( $V in $WebVideo ) {
-                Write-Verbose "WebVideo = $V"
-                if ( $WebVideo -notcontains 'http://' ) {
+                Write-Verbose "WebVideo = $($V.Matches)"
+                
+                if ( $V.Matches -notcontains 'http://' ) {
                     Write-verbose "No Http add base url"
+
+                    # ----- Remove index.htm if there
                     $BaseUrl = $WP.Url -replace 'index.html',''
-                    $Videos += ,"$BaseUrl$V"
+
+                    # ----- Remove query after ?
+                    if ( $BaseUrl | Select-String -Pattern '\?' -Quiet ) { 
+                        $BaseUrl = ($BaseUrl.Split( '?' ))[0]
+                    }
+
+                    Write-Verbose "BaseUrl = $BaseUrl"
+                    $V.Matches = "$BaseUrl$($V.Matches)"
                 }
+                $Videos += $V
             }
-            $WebVideo = $Videos
+            $WebVideo += $Videos
 
                 
             Write-Verbose "Checking HTML Code"
 
 
-            $WebVideo = ($WebPage.HTML.RawContent).split( "`n" ) | Select-String -Pattern $Patterns -AllMatches | Select-Object pattern, @{N='matches';e={ $_ | foreach { $_.matches.groups.groups[1].value } }}
+            $WebVideo += ($WebPage.HTML.RawContent).split( "`n" ) | Select-String -Pattern $Patterns -AllMatches | Select-Object pattern, @{N='matches';e={ $_ | foreach { $_.matches.groups.groups[1].value } }}
 
 
 
@@ -513,12 +534,6 @@ Function Get-IEWebVideo {
    #                 $WebVideo = $Matches[1]
    #             }
 
-   #             'file:\s?"(\S+mp4[^"]*)' {
-   #                 Write-Verbose 'file:"(\S+mp4[^"]*)'
-   #                 Write-Verbose "Found: $($Matches[0])"
-   #                 
-   #                 $WebVideo = $Matches[1]
-   #             }
                 
    #             """file"": ""(\S+)""" {
    #                 Write-Verbose """file"": ""(\S+)"""
