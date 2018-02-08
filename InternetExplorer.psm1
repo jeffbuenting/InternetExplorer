@@ -449,7 +449,9 @@ Function Get-IEWebVideo {
         $WebVideo = @()
 
         $Patterns = 'file: "(.*\.flv.*)"',
+            "video_url: '(.*\.f4v)",
             'file:\s?"(\S+mp4[^"]*)',
+            "file:\s?'(\S+\.mp4)',label: ""HD""",
             """file"": ""(\S+)""",
             "clip: {\s+url: '(\S+\.mp4)'",
             "video_url: '(\S+.mp4)",
@@ -514,7 +516,7 @@ Function Get-IEWebVideo {
                 }
                 $Videos += $V
             }
-            $WebVideo += $Videos
+            $WebVideo = $Videos
 
                 
             Write-Verbose "Checking HTML Code"
