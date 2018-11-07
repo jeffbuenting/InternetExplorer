@@ -449,16 +449,18 @@ Function Get-IEWebVideo {
         $WebVideo = @()
 
         $Patterns = 'file: "(.*\.flv.*)"',
+            'file:"(.*\.flv)"',
             "video_url: '(.*\.f4v)",
             'file:\s?"(\S+mp4[^"]*)',
-            "file:\s?'(\S+\.mp4)',label: ""HD""",
+            "file:\s?'(\S+\.mp4)'(?:,label: ""HD"")?",
             """file"": ""(\S+)""",
             "clip: {\s+url: '(\S+\.mp4)'",
             "video_url: '(\S+.mp4)",
             'Url: "(\S+.mp4)',
             "file=(\S+\.mp4)",
             '\[flv\]([\S]+)\[\/flv\]',
-            "url: \S+\('([a-z,A-Z,:,\/,\.,\d]+.mp4)"
+            "url: \S+\('([a-z,A-Z,:,\/,\.,\d]+.mp4)",
+            "html5player\.setVideoUrlHigh\('(.*)'\);"
 
     }
 
@@ -522,99 +524,10 @@ Function Get-IEWebVideo {
             Write-Verbose "Checking HTML Code"
 
 
-            $WebVideo += ($WebPage.HTML.RawContent).split( "`n" ) | Select-String -Pattern $Patterns -AllMatches | Select-Object pattern, @{N='matches';e={ $_ | foreach { $_.matches.groups.groups[1].value } }}
+            $WebVideo += ($WP.HTML.RawContent).split( "`n" ) | Select-String -Pattern $Patterns -AllMatches | Select-Object pattern, @{N='matches';e={ $_ | foreach { $_.matches.groups.groups[1].value } }}
 
+            Write-Verbose "Matched Count = $($WebVideo.Count)"
 
-
-
-   #         switch -Regex ( $WP.HTML.RawContent ) {
-
-   #             'file: "(.*\.flv.*)"' {
-   #                 Write-Verbose 'file: "(.*\.flv.*)"'
-   #                 Write-Verbose "Found: $($Matches[0])"
-   #                 
-   #                 $WebVideo = $Matches[1]
-   #             }
-
-                
-   #             """file"": ""(\S+)""" {
-   #                 Write-Verbose """file"": ""(\S+)"""
-   #                 Write-Verbose "Found: $($Matches[0])"
-
-   #                 $baseurl = ($WP.Url | Select-string -Pattern '[^/]*(/(/[^/]*/?)?)?' | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value).trimend( "/")
-   #                 $WebVideo = "$Baseurl$($Matches[1])"
-                   
-   #             }
-
-   #             "clip: {\s+url: '(\S+\.mp4)'" {
-   #                 Write-Verbose "clip: {\s+url: '(\S+\.mp4)'" 
-   #                 Write-Verbose "Found: $($Matches[0])"
-                    
-   #                 $WebVideo = $Matches[1]
-   #                 break
-   #             }
-
-                
-
-   #             "video_url: '(\S+.mp4)" {
-   #                 Write-Verbose "video_url: '(\S+.mp4)"
-   #                 Write-Verbose "Found: $($Matches[0])"
-                    
-   #                 $WebVideo = $Matches[1]
-   #             }
-
-   #             'Url: "(\S+.mp4)' {
-   #                 Write-Verbose 'Url: "(\S+.mp4)'
-   #                 Write-Verbose "Found: $($Matches[0])"
-                    
-   #                 $WebVideo = $Matches[1]
-   #             }
-
-   #             "file=(\S+\.mp4)" {       
-   #                 Write-Verbose "file=(\S+\.mp4)"
-   #                 Write-Verbose "Found: $($Matches[0])"
-   #                 Write-Verbose "$($Matches[1])"
-
-   #                 $SRC = $Matches[1]
-
-   #                 if ( $SRC -Match 'http://' ) {
-   #                         $SRC = ($SRC.substring(1)).TrimEnd('"')
-   #                         write-verbose "Source is full URL: $SRC"
-                                
-   #                         $WebVideo = $SRC
-   #                     }
-   #                     else {
-   #                         Write-Verbose 'Building Url'
-   #                         #$baseUrl = (($Txt | select-string -Pattern 'src=\S+flvplayer.swf' | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value).substring(5)).Replace( 'flvplayer.swf','')
-   #                         $baseUrl = ($WP.HTML.AllElements | where TagName -eq 'Embed' | Select-Object -ExpandProperty SRC).Replace( 'flvplayer.swf','')
-   #                         Write-Verbose "BaseUrl = $BaseUrl"
-
-   #                         $WebVideo = "$BaseUrl$($Matches[1])"
-   #                 }
-   #                 break
-   #             }
-
-   #             '\[flv\]([\S]+)\[\/flv\]' {
-   #                 Write-Verbose "video_url: \[flv\]([\S]+)\[\/flv\]"
-   #                 Write-Verbose "Found: $($Matches[0])"
-   #                 
-   #                 $WebVideo = $Matches[1]
-
-   #             }
-
-   #             "url: \S+\('([a-z,A-Z,:,\/,\.,\d]+.mp4)" {
-   #                 Write-Verbose "url: \S+\('([a-z,A-Z,:,\/,\.,\d]+.mp4)"
-   #                 Write-Verbose "Found: $($Matches[0])"
-                    
-   #                 $WebVideo = $Matches[1]
-   #             }
-
-             #   ".swf" {
-             #       Write-Warning "Haven't figured out how to download flash SWF Videos yet"
-             #   }
-
-
- #          }
         
             foreach ($M in $WebVideo ) {
                 Write-Verbose "Video Url:"
