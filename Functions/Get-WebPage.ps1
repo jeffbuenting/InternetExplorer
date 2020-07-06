@@ -6,7 +6,7 @@
 #test-using-powershell/
 #------------------------------------------------------------------------------
 
-Function Open-WebPage {
+Function Get-WebPage {
 
 	[CmdLetBinding()]
 	Param ( 
@@ -14,6 +14,9 @@ Function Open-WebPage {
         [string[]]$url, 
 	
     	[int]$delayTime = 400,
+
+        [ValidateSet ('Chrome','Edge','IE')]
+        [String]$Browser,
 
         [Switch]$Visible
     )
@@ -28,26 +31,31 @@ Function Open-WebPage {
         Foreach ( $U in $Url ) {
             Write-Verbose "Navigating to $U"
 
-            if ( $Visible ) {
-                $ie = New-Object -com "InternetExplorer.Application"
-	            $ie.visible = $true 
-  	            $ie.Navigate($u)
-              #  Write-Verbose "hello"
-      #$IE
-              #  $Title = $IE.LocationName
-              #  Write-Verbose "Title = $Title"
-               # While ($ie.Busy) { Start-Sleep -Milliseconds $DelayTime }
-            }
+
+            Switch ( $Browser ) {
+                'IE' {
+                    Write-Verbose "Opening in IE"
+                    if ( $Visible ) {
+                        $ie = New-Object -com "InternetExplorer.Application"
+	                    $ie.visible = $true 
+  	                    $ie.Navigate($u)
+                      #  Write-Verbose "hello"
+              #$IE
+                      #  $Title = $IE.LocationName
+                      #  Write-Verbose "Title = $Title"
+                       # While ($ie.Busy) { Start-Sleep -Milliseconds $DelayTime }
+                    }
 
            
 
 
-            if ( ( -Not $IE ) ) {
-                Write-Verbose "Error - Bad webpage"
-                Throw "Open-IEWebPage : Webpage address is incorrect or the web page is offline"
-                break
+                    if ( ( -Not $IE ) ) {
+                        Write-Verbose "Error - Bad webpage"
+                        Throw "Open-IEWebPage : Webpage address is incorrect or the web page is offline"
+                        break
+                    }
+                }
             }
-
 
      #       Write-Verbose "Title = $Title"
     #
@@ -67,6 +75,8 @@ Function Open-WebPage {
            Write-Verbose "Should be something on the line above"
             
             Try {
+                # ----- Force connection to be TLS 1.2
+                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
                 $WebUrl = Invoke-WebRequest -uri $u -ErrorAction Stop -Verbose:$false
             }
             catch {
@@ -106,4 +116,5 @@ Function Open-WebPage {
 	  
 }
 
-New-Alias -Name Open-IEWebPage -Value Open-WebPage
+Set-Alias -Name Open-IEWebPage -Value Get-WebPage
+Set-Alias -Value Get-IEWebPage -Name Get-WebPage

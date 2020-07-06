@@ -504,7 +504,7 @@ Function Test-IEWebPath {
 
 #[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
 
-Set-Alias -Value Open-IEWebPage -Name Get-IEWebPage
+
 Set-Alias -Value Save-IEWebImage -Name Save-IEWebVideo
 
 #Export-ModuleMember -Function Open-IEWebPage,Close-IEWebPage,Get-IEWebPageImage,Save-IEWebImage,Resolve-ShortcutFile,Get-IEWebPageLink,Get-IEWebVideo,Get-HTMLRootPath -Alias Save-IEWebVideo,Get-IEWebPage
