@@ -3,285 +3,26 @@
 #
 #------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-# Function Get-IEWebPageImages
-#
-# Downloads all image files from the specified URL
-#------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------
+# ----- Dot source the functions in the Functions folder of this module
+# ----- Ignore any file that begins with @, this is a place holder of work in progress.
 
- Function Get-IEWebPageImage {
 
- 	<#
-		.SYNOPSIS
-			Downloads all image files from the WebPage Object
+Get-ChildItem -path $PSScriptRoot\Functions\*.ps1 | where Name -notlike '@*' | Foreach { 
+    Write-Verbose "Dot Sourcing $_.FullName"
 
-		.DESCRIPTION
-			Analyzes the web page object for images and returns them.
-
-		.PARAMETER WebPage 
-            Web Page object returned from Open-IEWebPage.
-		
-		.Example
-			Get-IEWebPageImage -WebPage $IE
-
-        .Example 
-            Open-IEWebPage -Url "http://www.powershell.org" | Get-IEWebPageImage
-
-		.Link
-			http://powershell.com/cs/blogs/tobias/archive/2010/03/17/downloading-images-from-webpages.aspx
-    #>
-
-    [CmdletBinding()]
-    param (
-        [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [PSCustomObject[]]$WebPage
-    )
-
-    Process {
-        foreach ( $WP in $WebPage ) {
-  
-            Write-Verbose "Getting Images from $($WP.Url)..."
-
-            $WP.HTML.Images | Write-Output
-
-        }
-    }
-
+    . $_.FullName 
 }
 
+
+
 #------------------------------------------------------------------------------
 
-Function Save-IEWebImage {
-
-<#
-    .Description
-        Copies an image from a web page to the destination folder.  
-    
-    .Parameter WebImage
-        Image obtained from a webpage.  Use Get-IEWebImage to retrieve web images from a page.
-        
-    .Parameter Destiniation
-        Path name where the image will be copied.
-        
-    .Example
-         Get-IEWebPageImage -url $Url | Save-IEWebImage -Destination 'd:\temp\test'
-
-         Copies all images retrieved from $Url web page to d:\temp\test. 
-
-    .Link
-        http://www.powershellatoms.com/basic/download-file-website-powershell/
-#>
-
-    [CmdletBinding()]
-    param (
-        [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [String[]]$Source,
-        
-        [String]$Destination,
-
-        [String]$FileName,
-
-        [ValidateSet('ForeGround','High','Normal','Low',IgnoreCase=$True)]
-        [String]$Priority = 'Normal',
-
-        [Switch]$BackGround,
-
-        [Switch]$Wait
-    )
-
-    Begin {
-       # Import-Module BitsTransfer
-
-	    if (-not (Test-Path $Destination)) { md $Destination }
-    }
-
-    Process {
-        Foreach ( $S in $Source ) {
-            Write-Verbose "Saving $S"
-            
-            Try {
-                If ( $Background ) {
-                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description $S -Priority $Priority -Asynchronous -errorAction Stop
-                    }
-                    else {
-                        $BitsJob = Start-BitsTransfer -Source $S -Destination $Destination -Description $S -Priority $Priority -ErrorAction Stop
-                }
-            }
-            Catch {
-                $ExceptionMessage = $_.Exception.Message
-                $ExceptionType = $_.Exception.GetType().FullName
-                Write-Verbose "Destination = $Destination"
-                Write-Verbose "DisplayName = $DisplayName"
-                
-                Write-Warning "$($MyInvocation.InvocationName) : Problem Saving with Bits. Trying with Invoke-WebRequest.`n`n     $ExceptionMessage`n     $ExceptionType"
-
-                # ----- Extract file name from URL if not supplied
-                if ( -Not $FileName ) { $FileName = ($S.split('/' ))[-1] }
-
-                Try {
-                    #$URI = New-Object system.uri -ArgumentList $
-                    Invoke-WebRequest -uri $S -OutFile $Destination\$FileName -ErrorAction Stop
-                }
-                Catch {
-                    $ExceptionMessage = $_.Exception.Message
-                    $ExceptionType = $_.Exception.GetType().FullName
-                    Write-Verbose "Source = $Source"
-                    Write-Verbose "Destination = $Destination"
-                    Write-Verbose "FileName = $FileName"
-
-                    Throw "$($MyInvocation.InvocationName) : Invoke-WebRequest.`n`n     $ExceptionMessage`n     $ExceptionType"
-
-                }
-            }
-
-            if ( $Wait ) {
-                Write-Verbose "Waiting for Bits Transfer to complete"
-                While ( ( $BitsJob.JobState -ne 'Error' ) -or ( $BitsJob -ne 'Transferred' ) ) {
-                    Sleep -Seconds 15
-                }
-            }
-   
-        }
-
-    }
-
-}
-
-#------------------------------------------------------------------------------
-# Function Wait-IEWebPageLoad
-#
-# Helper function that waits until the web page has loaded.  
-# http://www.pvle.be/2009/06/web-ui-automationFunction Wait-IEWebPageLoad
-#test-using-powershell/
-#------------------------------------------------------------------------------
-
-Function Wait-IEWebPageLoad {
-
-	[CmdLetBinding()]
-	Param ( $ie,
-			[int]$delayTime = 100)
-
-	Write-Verbose "Waiting for Web Page to Load"
-  	$loaded = $false
- 
-  	while ($loaded -eq $false) {
-    	[System.Threading.Thread]::Sleep($delayTime) 
- 
-    	#If the browser is not busy, the page is loaded
-    	if (-not $ie.Busy){
-      		$loaded = $true
-    	}
-  	}
-	Return $ie
-}
-
-#------------------------------------------------------------------------------
-# Function Open-IEWebPage 
-#
-# Opens Web Page.  Returns object holding web page
-# http://www.pvle.be/2009/06/web-ui-automationFunction Wait-IEWebPageLoad
-#test-using-powershell/
-#------------------------------------------------------------------------------
-
-Function Open-IEWebPage {
-
-	[CmdLetBinding()]
-	Param ( 
-        [Parameter( Mandatory=$True,ValueFromPipeline=$True )]
-        [string[]]$url, 
-	
-    	[int]$delayTime = 400,
-
-        [Switch]$Visible
-    )
-
-    Begin {
-        If ($PSBoundParameters['Debug']) {
-            $DebugPreference = 'Continue'
-        }
-    }
-
-    Process {
-        Foreach ( $U in $Url ) {
-            Write-Verbose "Navigating to $U"
-
-            if ( $Visible ) {
-                $ie = New-Object -com "InternetExplorer.Application"
-	            $ie.visible = $true 
-  	            $ie.Navigate($u)
-              #  Write-Verbose "hello"
-      #$IE
-              #  $Title = $IE.LocationName
-              #  Write-Verbose "Title = $Title"
-               # While ($ie.Busy) { Start-Sleep -Milliseconds $DelayTime }
-            }
-
-           
 
 
-            if ( ( -Not $IE ) ) {
-                Write-Verbose "Error - Bad webpage"
-                Throw "Open-IEWebPage : Webpage address is incorrect or the web page is offline"
-                break
-            }
 
 
-     #       Write-Verbose "Title = $Title"
-    #
-    #        $win = New-Object -comObject Shell.Application
-    #        $try = 0
-    #        $ie2 = $null
-    #        do {  
-    ##            Start-Sleep -milliseconds 500  
-    #            $ie2 = @($win.windows() | ? { $_.locationName -like '*PowerShell*' })[0]  
-    #            $try ++  
-    #            if ($try -gt 20) {    
-    #                Throw "Web Page cannot be opened."  
-    #            }
-    #        } while ($ie2 -eq $null)
 
-           write-verbose "$U"
-           Write-Verbose "Should be something on the line above"
-            
-            Try {
-                $WebUrl = Invoke-WebRequest -uri $u -ErrorAction Stop -Verbose:$false
-            }
-            catch {
-                #Write-Error $Error[0].Exception
-                Throw "Open-IEWebPage : Problem opening web page"
-            }
-
-                    $Properties = @{
-                        'HTML' = (  Invoke-WebRequest -uri $u -ErrorAction Stop -Verbose:$false);
-                        'Url' = $U;
-                        'IEApp' = $IE2;
-                        'IE' = $IE;
-                        'Title' = $Title;
-                    }
-                
-                
-
-            $WebPage = New-Object -TypeName psobject -Property $Properties
-
-            Write-Debug "WebPage Ojbect"
-            Write-Debug ($WebPage.IE | Out-String)
-
-            # ----- Don't know why but a Null value is returning.  This will remove any null values and only return the items ith values
-      
-            foreach ( $I in $WebPage ) {
-       
-                if ( $I -ne $Null ) { 
-                        Write-Output $I 
-                    }
-                    Else {
-                        Write-Verbose "Null"
-                }
-  
-            }
-        }
-  }
-	  
-}
 
 #------------------------------------------------------------------------------
 
@@ -763,7 +504,7 @@ Function Test-IEWebPath {
 
 #[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
 
-Set-Alias -Value Open-IEWebPage -Name Get-IEWebPage
+
 Set-Alias -Value Save-IEWebImage -Name Save-IEWebVideo
 
 #Export-ModuleMember -Function Open-IEWebPage,Close-IEWebPage,Get-IEWebPageImage,Save-IEWebImage,Resolve-ShortcutFile,Get-IEWebPageLink,Get-IEWebVideo,Get-HTMLRootPath -Alias Save-IEWebVideo,Get-IEWebPage
