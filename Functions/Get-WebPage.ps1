@@ -1,5 +1,5 @@
 ﻿#------------------------------------------------------------------------------
-# Function Open-IEWebPage 
+# Function Get-webpage 
 #
 # Opens Web Page.  Returns object holding web page
 # http://www.pvle.be/2009/06/web-ui-automationFunction Wait-IEWebPageLoad
@@ -51,7 +51,7 @@ Function Get-WebPage {
 
                     if ( ( -Not $IE ) ) {
                         Write-Verbose "Error - Bad webpage"
-                        Throw "Open-IEWebPage : Webpage address is incorrect or the web page is offline"
+                        Throw "Get-webpage : Webpage address is incorrect or the web page is offline"
                         break
                     }
                 }
@@ -81,7 +81,7 @@ Function Get-WebPage {
             }
             catch {
                 #Write-Error $Error[0].Exception
-                Throw "Open-IEWebPage : Problem opening web page"
+                Throw "Get-webpage : Problem opening web page"
             }
 
                     $Properties = @{
@@ -117,4 +117,4 @@ Function Get-WebPage {
 }
 
 Set-Alias -Name Open-IEWebPage -Value Get-WebPage
-Set-Alias -Value Get-IEWebPage -Name Get-WebPage
+#Set-Alias -Name Get-IEWebPage -Value Get-WebPage
